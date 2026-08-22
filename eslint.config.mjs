@@ -8,7 +8,11 @@ export default defineConfig([
   {
     files: ["**/*.js", "**/*.cjs", "**/*.mjs"],
     languageOptions: {
-      globals: { process: "readonly" },
+      globals: {
+        process: "readonly",
+        console: "readonly",
+        fetch: "readonly",
+      },
     },
   },
   ...tseslint.configs.recommended,
