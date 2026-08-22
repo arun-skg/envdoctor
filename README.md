@@ -9,6 +9,17 @@
 
 **Local-first consistency checker for environment variables.** Detects missing, unused, duplicate, and mismatched variables across `.env` files, Docker Compose, Kubernetes manifests, GitHub Actions, and source code — no network calls, no telemetry, no values ever printed.
 
+<details>
+<summary><strong>📈 Download trends</strong></summary>
+
+<a href="https://npm-stat.com/charts.html?package=%40arunskg%2Fenvdoctor">
+  <img src="https://raw.githubusercontent.com/arun-skg/envdoctor/npm-downloads/downloads.svg" alt="npm daily downloads, last 90 days" width="100%">
+</a>
+
+<sub>Auto-refreshed daily by the <a href="./.github/workflows/downloads-chart.yml">Downloads chart</a> workflow. Click for interactive history on npm-stat.</sub>
+
+</details>
+
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │  ENVIRONMENT AUDIT                                              │
