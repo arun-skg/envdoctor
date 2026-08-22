@@ -1,0 +1,34 @@
+# "Publishes" the PHP package on a `php-v*` tag.
+#
+# Composer/Packagist doesn't host artifacts — it reads composer.json from your
+# git repo and serves tagged releases. One-time: register the package at
+# https://packagist.org (Submit) so it tracks this repo. This workflow pings
+# Packagist to update immediately after a tag (otherwise the GitHub webhook
+# handles it on its own schedule).
+#
+# Required secrets:
+#   PACKAGIST_USERNAME  — your packagist.org username
+#   PACKAGIST_TOKEN     — API token from https://packagist.org/profile/
+#
+# NOTE: composer.json lives in ./php. Packagist expects it at the repo root, so
+# either register a subtree-split repo (php/ as its own repo) or move the PHP
+# package to the root for publishing. See php/README.md.
+name: PHP Release
+
+on:
+  push:
+    tags:
+      - "php-v*"
+
+permissions:
+  contents: read
+
+jobs:
+  notify-packagist:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Packagist update
+        run: |
+          curl -sS -XPOST -H "content-type:application/json" \
+            "https://packagist.org/api/update-package?username=${{ secrets.PACKAGIST_USERNAME }}&apiToken=${{ secrets.PACKAGIST_TOKEN }}" \
+            -d '{"repository":{"url":"https://github.com/arun-skg/envdoctor"}}'
