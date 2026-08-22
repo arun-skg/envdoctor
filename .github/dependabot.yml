@@ -5,6 +5,12 @@ updates:
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 5
+    ignore:
+      # typescript-eslint (latest 8.67) caps its typescript peer at <6.1.0, so
+      # TypeScript 7 is not yet adoptable. Ignore the major bump until the
+      # lint toolchain supports it; minor/patch 5.x updates still flow through.
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
     groups:
       dev-dependencies:
         dependency-type: "development"
