@@ -1,0 +1,25 @@
+name: Ruby CI
+
+on:
+  push:
+    paths:
+      - "ruby/**"
+      - ".github/workflows/ruby-ci.yml"
+  pull_request:
+    paths:
+      - "ruby/**"
+      - ".github/workflows/ruby-ci.yml"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ruby
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+      - run: ruby -Ilib test/test_scanner.rb
+      - run: gem build envdoctor.gemspec

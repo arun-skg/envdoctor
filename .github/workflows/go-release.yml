@@ -1,0 +1,35 @@
+# "Publishes" the Go module on a `go/v*` tag.
+#
+# Go modules have no registry upload — pushing a semver tag IS the release, and
+# the module proxy serves it on first request. The tag MUST be prefixed with the
+# module's subdirectory, e.g.  go/v0.1.0  (because the module lives in ./go).
+# This workflow verifies the tagged code and warms proxy.golang.org so
+#   go install github.com/arun-skg/envdoctor/go/cmd/envdoctor@<version>
+# resolves immediately. No secrets required.
+name: Go Release
+
+on:
+  push:
+    tags:
+      - "go/v*"
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: go
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+      - run: go vet ./...
+      - run: go test ./...
+      - name: Warm the module proxy
+        run: |
+          version="${GITHUB_REF_NAME#go/}"
+          GOPROXY=proxy.golang.org go list -m "github.com/arun-skg/envdoctor/go@${version}" || true

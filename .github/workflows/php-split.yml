@@ -1,0 +1,47 @@
+# Keeps the read-only split repo arun-skg/envdoctor-php in sync with php/.
+#
+# Packagist requires composer.json at a repo root, but ours lives in ./php.
+# The split repo (envdoctor-php) holds just the php/ subtree at its root; register
+# THAT repo on https://packagist.org. Its GitHub webhook then publishes on push/tag.
+#
+# This workflow:
+#   * on push to main touching php/**  -> refresh the split repo's main branch
+#   * on a `php-v*` tag                -> also push a clean semver tag (v0.1.0)
+#                                         to the split repo, which Packagist releases
+#
+# Required secret:
+#   SPLIT_REPO_TOKEN — a PAT (or fine-grained token) with contents:write on
+#                      arun-skg/envdoctor-php.
+name: PHP Split
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "php/**"
+      - ".github/workflows/php-split.yml"
+    tags:
+      - "php-v*"
+
+permissions:
+  contents: read
+
+jobs:
+  split:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Split php/ subtree
+        run: git subtree split --prefix=php -b php-split
+      - name: Push to split repo
+        env:
+          TOKEN: ${{ secrets.SPLIT_REPO_TOKEN }}
+        run: |
+          remote="https://x-access-token:${TOKEN}@github.com/arun-skg/envdoctor-php.git"
+          git push --force "$remote" php-split:refs/heads/main
+          if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
+            version="${GITHUB_REF_NAME#php-}"   # php-v0.1.0 -> v0.1.0
+            git push "$remote" "php-split:refs/tags/${version}"
+          fi
