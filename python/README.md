@@ -5,9 +5,13 @@ local-first consistency checker for environment variables, distributed on PyPI
 so Python projects can use it without Node.
 
 ```bash
-pip install envdoctor
+pip install arun-envdoctor
 envdoctor scan --dir .
 ```
+
+> The PyPI **distribution** is named `arun-envdoctor` (PyPI blocks `envdoctor` as
+> too similar to an existing project), but the installed **command** and the
+> importable **package** are both still `envdoctor`.
 
 ## What it does
 

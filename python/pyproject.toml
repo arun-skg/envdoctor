@@ -3,7 +3,7 @@ requires = ["setuptools>=61"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "envdoctor"
+name = "arun-envdoctor"
 version = "0.1.0"
 description = "Local-first consistency checker for environment variables (native Python port)"
 readme = "README.md"
