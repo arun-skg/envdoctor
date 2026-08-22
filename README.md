@@ -9,7 +9,15 @@
 [![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](./CONTRIBUTING.md)
 [![Code of Conduct](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](https://github.com/arun-skg/envdoctor?tab=coc-ov-file)
 
+[![PyPI](https://img.shields.io/pypi/v/arun-envdoctor.svg?label=PyPI&logo=pypi&logoColor=white)](https://pypi.org/project/arun-envdoctor/)
+[![Gem](https://img.shields.io/gem/v/envdoctor.svg?label=RubyGems&logo=rubygems&logoColor=white)](https://rubygems.org/gems/envdoctor)
+[![Packagist](https://img.shields.io/packagist/v/arun-skg/envdoctor.svg?label=Packagist&logo=packagist&logoColor=white)](https://packagist.org/packages/arun-skg/envdoctor)
+[![Maven Central](https://img.shields.io/badge/Maven%20Central-0.1.0-C71A36.svg?logo=apachemaven&logoColor=white)](https://central.sonatype.com/artifact/io.github.arun-skg/envdoctor)
+[![Go module](https://img.shields.io/badge/Go-v0.1.0-00ADD8.svg?logo=go&logoColor=white)](https://pkg.go.dev/github.com/arun-skg/envdoctor/go)
+
 **Local-first consistency checker for environment variables.** Detects missing, unused, duplicate, and mismatched variables across `.env` files, Docker Compose, Kubernetes manifests, GitHub Actions, and source code — no network calls, no telemetry, no values ever printed.
+
+**Available for six ecosystems** — Node, Python, Go, Ruby, PHP, and Java — as [native ports](#native-ports), each installable from its own package manager.
 
 ### 📈 Download trends
 
@@ -54,6 +62,7 @@
 - [Why](#why)
 - [Supported formats](#supported-formats)
 - [Installation](#installation)
+- [Native ports](#native-ports)
 - [Quick start](#quick-start)
 - [Detectors](#detectors)
 - [Commands](#commands)
@@ -98,6 +107,40 @@ npm install -g @arunskg/envdoctor
 # Or run directly with npx
 npx @arunskg/envdoctor scan
 ```
+
+Using another language? See [native ports](#native-ports) below.
+
+## Native ports
+
+envdoctor is published as a **standalone native implementation** for each
+ecosystem — no Node required, no wrappers. Every port scans its own language's
+environment idioms, reconciles them against your `.env` files, and exits `1` on
+errors so it drops straight into CI.
+
+| Ecosystem | Install | Detects |
+|-----------|---------|---------|
+| **Node** (reference) | `npm install -g @arunskg/envdoctor` | `process.env.X`, `import.meta.env.X` |
+| **Python** ([`python/`](./python)) | `pip install arun-envdoctor` | `os.getenv`, `os.environ[...]`, `os.environ.get` |
+| **Go** ([`go/`](./go)) | `go install github.com/arun-skg/envdoctor/go/cmd/envdoctor@latest` | `os.Getenv`, `os.LookupEnv` |
+| **Ruby** ([`ruby/`](./ruby)) | `gem install envdoctor` | `ENV["X"]`, `ENV.fetch("X")` |
+| **PHP** ([`php/`](./php)) | `composer require --dev arun-skg/envdoctor` | `getenv`, `$_ENV`, `$_SERVER` |
+| **Java** ([`java/`](./java)) | [`io.github.arun-skg:envdoctor`](https://central.sonatype.com/artifact/io.github.arun-skg/envdoctor) | `System.getenv("X")` |
+| **Perl** ([`perl/`](./perl)) | `cpanm App::Envdoctor` *(pending CPAN release)* | `$ENV{X}` |
+
+All ports share the same CLI shape:
+
+```bash
+envdoctor scan --dir .        # audit; exit 1 on errors
+envdoctor scan --strict       # treat warnings as errors too
+```
+
+> **Note:** the Python distribution is named `arun-envdoctor` on PyPI (the bare
+> name is blocked as too similar to an existing project), but the installed
+> command and importable package are both `envdoctor`.
+
+Each port has its own README, test suite, and CI workflow. The Node
+implementation is the reference and has the fullest detector set — the native
+ports currently focus on the core missing/unused reconciliation.
 
 > **Note:** run `npx @arunskg/envdoctor` from your project directory, not from
 > inside a checkout of this repo — npx resolves the local package first, whose
