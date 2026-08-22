@@ -127,7 +127,7 @@ export async function loadConfig(rootDir: string): Promise<EnvdoctorConfig> {
 
   if (!configPath && pkgConfig === undefined) return DEFAULT_CONFIG;
 
-  let raw: unknown = {};
+  let raw: unknown;
   if (configPath) {
     try {
       const mod = await import(pathToFileURL(configPath).href);
