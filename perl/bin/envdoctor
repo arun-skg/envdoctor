@@ -1,0 +1,43 @@
+#!/usr/bin/env perl
+use strict;
+use warnings;
+use FindBin ();
+use lib "$FindBin::Bin/../lib";
+use Envdoctor::Scanner ();
+use Cwd ();
+
+my $dir    = '.';
+my $strict = 0;
+my @args   = @ARGV;
+shift @args if @args && $args[0] eq 'scan';
+while (@args) {
+    my $a = shift @args;
+    if ( $a eq '-d' || $a eq '--dir' ) { $dir = shift @args // '.'; }
+    elsif ( $a =~ /^--dir=(.*)$/ )     { $dir = $1; }
+    elsif ( $a eq '--strict' )         { $strict = 1; }
+}
+
+my $root     = Cwd::abs_path($dir) // $dir;
+my $findings = Envdoctor::Scanner::scan($root);
+my @errors   = grep { $_->{severity} eq 'error' } @$findings;
+my @warnings = grep { $_->{severity} eq 'warning' } @$findings;
+
+print "ENVIRONMENT AUDIT\n";
+print '=' x 40, "\n";
+if ( !@$findings ) {
+    print "\nNo issues found.\n";
+    exit 0;
+}
+if (@errors) {
+    print "\nErrors\n";
+    printf "  x %s %s:%d  %s\n", $_->{name}, $_->{origin}{file}, $_->{origin}{line}, $_->{message}
+        for @errors;
+}
+if (@warnings) {
+    print "\nWarnings\n";
+    printf "  ! %s %s:%d  %s\n", $_->{name}, $_->{origin}{file}, $_->{origin}{line}, $_->{message}
+        for @warnings;
+}
+printf "\nSummary: %d error(s), %d warning(s)\n", scalar(@errors), scalar(@warnings);
+
+exit( ( @errors || ( $strict && @warnings ) ) ? 1 : 0 );

@@ -8,3 +8,9 @@ coverage/
 !.env.example
 !tests/fixtures/**/.env
 !tests/fixtures/**/.env.*
+
+# Perl
+perl/blib/
+perl/Makefile
+perl/pm_to_blib
+perl/MYMETA.*
