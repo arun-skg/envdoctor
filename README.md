@@ -2,6 +2,7 @@
 
 [![npm version](https://img.shields.io/npm/v/@arunskg/envdoctor.svg)](https://www.npmjs.com/package/@arunskg/envdoctor)
 [![npm downloads](https://img.shields.io/npm/dm/@arunskg/envdoctor.svg)](https://www.npmjs.com/package/@arunskg/envdoctor)
+[![total downloads](https://img.shields.io/npm/dt/@arunskg/envdoctor.svg?label=downloads%20total)](https://www.npmjs.com/package/@arunskg/envdoctor)
 [![CI](https://github.com/arun-skg/envdoctor/actions/workflows/ci.yml/badge.svg)](https://github.com/arun-skg/envdoctor/actions/workflows/ci.yml)
 [![node](https://img.shields.io/node/v/@arunskg/envdoctor.svg)](https://nodejs.org)
 [![license](https://img.shields.io/npm/l/@arunskg/envdoctor.svg)](./LICENSE)
