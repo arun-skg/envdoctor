@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "envdoctor"
+version = "0.1.0"
+description = "Local-first consistency checker for environment variables (native Python port)"
+readme = "README.md"
+requires-python = ">=3.8"
+license = { text = "MIT" }
+authors = [{ name = "Arun Natesan" }]
+keywords = ["env", "dotenv", "environment-variables", "cli", "linter", "static-analysis"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Environment :: Console",
+    "Topic :: Software Development :: Quality Assurance",
+]
+
+[project.urls]
+Homepage = "https://github.com/arun-skg/envdoctor"
+Repository = "https://github.com/arun-skg/envdoctor"
+
+[project.scripts]
+envdoctor = "envdoctor.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
