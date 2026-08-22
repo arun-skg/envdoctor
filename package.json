@@ -57,7 +57,7 @@
   ],
   "dependencies": {
     "chalk": "^6.0.0",
-    "commander": "^12.1.0",
+    "commander": "^15.0.0",
     "dotenv": "^16.4.5",
     "fast-glob": "^3.3.2",
     "yaml": "^2.5.0",
