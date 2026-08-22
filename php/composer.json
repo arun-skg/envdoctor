@@ -1,0 +1,20 @@
+{
+  "name": "arun-skg/envdoctor",
+  "description": "Local-first consistency checker for environment variables (native PHP port)",
+  "type": "library",
+  "license": "MIT",
+  "keywords": ["env", "dotenv", "environment-variables", "cli", "linter", "static-analysis"],
+  "homepage": "https://github.com/arun-skg/envdoctor",
+  "require": {
+    "php": ">=8.1"
+  },
+  "autoload": {
+    "psr-4": {
+      "Envdoctor\\": "src/"
+    }
+  },
+  "bin": ["bin/envdoctor"],
+  "scripts": {
+    "test": "php tests/ScannerTest.php"
+  }
+}
