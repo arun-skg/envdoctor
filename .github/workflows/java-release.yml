@@ -28,6 +28,8 @@ jobs:
         working-directory: java
     steps:
       - uses: actions/checkout@v5
+      # setup-java writes ~/.m2/settings.xml with the Central server credentials.
+      # GPG is imported manually below (setup-java's built-in import is flaky).
       - uses: actions/setup-java@v4
         with:
           distribution: "temurin"
@@ -36,11 +38,15 @@ jobs:
           server-id: central
           server-username: CENTRAL_USERNAME
           server-password: CENTRAL_PASSWORD
-          gpg-private-key: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
-          gpg-passphrase: MAVEN_GPG_PASSPHRASE
+      - name: Import GPG key
+        env:
+          MAVEN_GPG_PRIVATE_KEY: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
+        run: |
+          echo "$MAVEN_GPG_PRIVATE_KEY" | gpg --batch --import
+          gpg --list-secret-keys --keyid-format=long
       - name: Deploy to Maven Central
         env:
           CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
           CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
           MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
-        run: mvn -B -Prelease deploy
+        run: mvn -B -Prelease deploy "-Dgpg.passphrase=${MAVEN_GPG_PASSPHRASE}"
