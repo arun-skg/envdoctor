@@ -42,12 +42,30 @@ jobs:
       - name: Import GPG key
         env:
           MAVEN_GPG_PRIVATE_KEY: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
+          MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
         run: |
           echo "$MAVEN_GPG_PRIVATE_KEY" | base64 -d | gpg --batch --import
           gpg --list-secret-keys --keyid-format=long
+          # Allow the agent to accept a preset passphrase, then cache it so
+          # maven-gpg-plugin never has to prompt (avoids "Bad passphrase" from
+          # shell/property interpolation of the secret).
+          echo "allow-preset-passphrase" >> ~/.gnupg/gpg-agent.conf
+          echo "pinentry-mode loopback" >> ~/.gnupg/gpg.conf
+          gpgconf --reload gpg-agent
+          # Strip any stray whitespace/newline the secret may carry.
+          printf '%s' "$MAVEN_GPG_PASSPHRASE" | tr -d '\r\n' > /tmp/gpg_pass
+          KEYGRIP=$(gpg --batch --with-colons --with-keygrip --list-secret-keys \
+            | awk -F: '/^grp:/{print $10; exit}')
+          echo "keygrip=$KEYGRIP"
+          /usr/lib/gnupg/gpg-preset-passphrase --preset --passphrase "$(cat /tmp/gpg_pass)" "$KEYGRIP" \
+            || echo "preset unavailable; falling back to -Dgpg.passphrase"
+          # Verify signing actually works before attempting the deploy.
+          echo test > /tmp/sigtest.txt
+          gpg --batch --yes --pinentry-mode loopback --passphrase-file /tmp/gpg_pass \
+            --detach-sign /tmp/sigtest.txt && echo "SIGNING OK"
       - name: Deploy to Maven Central
         env:
           CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
           CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
           MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
-        run: mvn -B -Prelease deploy "-Dgpg.passphrase=${MAVEN_GPG_PASSPHRASE}"
+        run: mvn -B -Prelease deploy "-Dgpg.passphraseServerId=gpg" "-Dgpg.passphrase=$(cat /tmp/gpg_pass)"
