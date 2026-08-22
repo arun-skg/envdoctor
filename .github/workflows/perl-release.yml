@@ -1,0 +1,41 @@
+# Publishes the Perl distribution to CPAN on a `perl-v*` tag.
+#
+# Required secrets (a PAUSE account — https://pause.perl.org):
+#   PAUSE_USER      — your PAUSE id
+#   PAUSE_PASSWORD  — your PAUSE password
+# The `Envdoctor` namespace must be registered/permitted for your PAUSE id
+# before the first upload.
+name: Perl Release
+
+on:
+  push:
+    tags:
+      - "perl-v*"
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: perl
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cpanminus
+          sudo cpanm --notest CPAN::Uploader
+      - name: Test and build dist
+        run: |
+          prove -Ilib t/
+          perl Makefile.PL
+          make dist
+      - name: Upload to PAUSE/CPAN
+        env:
+          PAUSE_USER: ${{ secrets.PAUSE_USER }}
+          PAUSE_PASSWORD: ${{ secrets.PAUSE_PASSWORD }}
+        run: |
+          cpan-upload -u "$PAUSE_USER" -p "$PAUSE_PASSWORD" Envdoctor-*.tar.gz

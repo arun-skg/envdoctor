@@ -1,0 +1,24 @@
+name: Perl CI
+
+on:
+  push:
+    paths:
+      - "perl/**"
+      - ".github/workflows/perl-ci.yml"
+  pull_request:
+    paths:
+      - "perl/**"
+      - ".github/workflows/perl-ci.yml"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: perl
+    steps:
+      - uses: actions/checkout@v5
+      - name: Run tests
+        run: prove -Ilib t/
+      - name: Build check
+        run: perl Makefile.PL && make
