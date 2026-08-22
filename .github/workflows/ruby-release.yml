@@ -1,0 +1,34 @@
+# Publishes the Ruby gem to RubyGems on a `ruby-v*` tag.
+#
+# Required secret:
+#   RUBYGEMS_API_KEY  — an API key from https://rubygems.org/settings/edit
+#                       (or configure a RubyGems Trusted Publisher for OIDC).
+# The gem enables `rubygems_mfa_required`, so use an API key scoped for pushes.
+name: Ruby Release
+
+on:
+  push:
+    tags:
+      - "ruby-v*"
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ruby
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+      - run: ruby -Ilib test/test_scanner.rb
+      - name: Build and push gem
+        env:
+          GEM_HOST_API_KEY: ${{ secrets.RUBYGEMS_API_KEY }}
+        run: |
+          gem build envdoctor.gemspec
+          gem push envdoctor-*.gem
