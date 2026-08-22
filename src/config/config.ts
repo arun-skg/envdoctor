@@ -49,13 +49,14 @@ export const envdoctorConfigSchema = z.object({
    * Override severity per detector. Use "off" to disable a detector entirely.
    * Example: `{ unused: "off", "environment-diff": "warn" }`
    */
-  rules: z.record(z.enum(["error", "warning", "off"])).default({}),
+  rules: z.record(z.string(), z.enum(["error", "warning", "off"])).default({}),
   /**
    * Per-variable validation schema. Values in env files are checked against
    * these rules.
    */
   schema: z
     .record(
+      z.string(),
       z.object({
         type: z
           .enum(["string", "integer", "float", "boolean", "url", "json", "enum", "regex"])
