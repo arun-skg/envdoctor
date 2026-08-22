@@ -140,9 +140,22 @@ envdoctor scan --strict       # treat warnings as errors too
 > name is blocked as too similar to an existing project), but the installed
 > command and importable package are both `envdoctor`.
 
-Each port has its own README, test suite, and CI workflow. The Node
-implementation is the reference and has the fullest detector set — the native
-ports currently focus on the core missing/unused reconciliation.
+Each port has its own README, test suite, and CI workflow. Every native port
+detects the same four rules — **missing** / undefined-in-source, **unused**,
+**duplicates**, and **public-prefix** (a secret-looking variable leaked through
+a client prefix like `NEXT_PUBLIC_`). The Node implementation is the reference
+and adds the rest — type mismatch, schema validation, weak-secret and typo
+detection, environment diffs, plus scanning Docker Compose, Kubernetes and
+GitHub Actions and the `init`/`diff`/`sync`/`fix` subcommands.
+
+| Detector | Node | Python · Go · Ruby · PHP · Perl · Java |
+|---|:---:|:---:|
+| missing / undefined-in-source | ✅ | ✅ |
+| unused | ✅ | ✅ |
+| duplicates | ✅ | ✅ |
+| public-prefix (secret leak) | ✅ | ✅ |
+| type-mismatch · schema · weak-secret · typo · env-diff | ✅ | — |
+| Docker Compose · Kubernetes · GitHub Actions sources | ✅ | — |
 
 > **Note:** run `npx @arunskg/envdoctor` from your project directory, not from
 > inside a checkout of this repo — npx resolves the local package first, whose
