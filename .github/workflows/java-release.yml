@@ -8,7 +8,8 @@
 # Required secrets:
 #   CENTRAL_USERNAME        — Central portal token username
 #   CENTRAL_PASSWORD        — Central portal token password
-#   MAVEN_GPG_PRIVATE_KEY   — ASCII-armored private key (gpg --armor --export-secret-keys)
+#   MAVEN_GPG_PRIVATE_KEY   — base64 of the ASCII-armored private key, single line:
+#                             gpg --armor --export-secret-keys KEYID | base64 | tr -d '\n'
 #   MAVEN_GPG_PASSPHRASE    — passphrase for that key
 name: Java Release
 
@@ -42,7 +43,7 @@ jobs:
         env:
           MAVEN_GPG_PRIVATE_KEY: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
         run: |
-          echo "$MAVEN_GPG_PRIVATE_KEY" | gpg --batch --import
+          echo "$MAVEN_GPG_PRIVATE_KEY" | base64 -d | gpg --batch --import
           gpg --list-secret-keys --keyid-format=long
       - name: Deploy to Maven Central
         env:
