@@ -1,0 +1,36 @@
+# Publishes the Python port to PyPI on a `python-v*` tag.
+#
+# Uses PyPI Trusted Publishing (OIDC) — no API token stored. One-time setup:
+#   PyPI → your project → Publishing → add a trusted publisher:
+#     owner: arun-skg   repo: envdoctor
+#     workflow: python-release.yml   environment: pypi
+# (Fallback: set a PYPI_API_TOKEN secret and swap in the token step below.)
+name: Python Release
+
+on:
+  push:
+    tags:
+      - "python-v*"
+
+permissions:
+  contents: read
+  id-token: write # required for OIDC trusted publishing
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: pypi
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build
+        working-directory: python
+        run: |
+          python -m pip install --upgrade build
+          python -m build
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: python/dist/

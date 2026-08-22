@@ -11,3 +11,13 @@ coverage/
 
 # Ruby
 ruby/*.gem
+# Python build artifacts
+python/build/
+python/dist/
+python/*.egg-info/
+python/src/*.egg-info/
+python/.pytest_cache/
+__pycache__/
+
+# Go
+go/envdoctor
