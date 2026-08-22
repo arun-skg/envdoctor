@@ -17,7 +17,7 @@ updates.
 Instead, report privately through GitHub's
 [private vulnerability reporting](https://github.com/arun-skg/envdoctor/security/advisories/new)
 (Security → Report a vulnerability). If that is unavailable, email the
-maintainer at **govindharajshanthi@gmail.com**.
+maintainer at **arunskg12@gmail.com**.
 
 Please include:
 
