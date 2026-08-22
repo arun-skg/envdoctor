@@ -61,7 +61,7 @@
     "dotenv": "^16.4.5",
     "fast-glob": "^3.3.2",
     "yaml": "^2.5.0",
-    "zod": "^3.23.8"
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.0",
