@@ -3,7 +3,7 @@
 # Required secrets (a PAUSE account — https://pause.perl.org):
 #   PAUSE_USER      — your PAUSE id
 #   PAUSE_PASSWORD  — your PAUSE password
-# The `Envdoctor` namespace must be registered/permitted for your PAUSE id
+# The `App::Envdoctor` namespace must be registered/permitted for your PAUSE id
 # before the first upload.
 name: Perl Release
 
@@ -38,4 +38,4 @@ jobs:
           PAUSE_USER: ${{ secrets.PAUSE_USER }}
           PAUSE_PASSWORD: ${{ secrets.PAUSE_PASSWORD }}
         run: |
-          cpan-upload -u "$PAUSE_USER" -p "$PAUSE_PASSWORD" Envdoctor-*.tar.gz
+          cpan-upload -u "$PAUSE_USER" -p "$PAUSE_PASSWORD" App-Envdoctor-*.tar.gz

@@ -31,3 +31,9 @@ __pycache__/
 
 # Go
 go/envdoctor
+
+# Perl dist artifacts
+perl/App-Envdoctor-*
+perl/MYMETA.*
+perl/META.yml
+perl/META.json

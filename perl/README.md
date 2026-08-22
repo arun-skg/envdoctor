@@ -4,8 +4,14 @@ Native Perl port of [envdoctor](https://github.com/arun-skg/envdoctor) — a
 local-first environment-variable consistency checker.
 
 ```bash
-perl Makefile.PL && make && make install
+cpanm App::Envdoctor
 envdoctor scan --dir .
+```
+
+Or from a checkout:
+
+```bash
+perl Makefile.PL && make && make install
 ```
 
 ## What it does

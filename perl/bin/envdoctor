@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use FindBin ();
 use lib "$FindBin::Bin/../lib";
-use Envdoctor::Scanner ();
+use App::Envdoctor::Scanner ();
 use Cwd ();
 
 my $dir    = '.';
@@ -18,7 +18,7 @@ while (@args) {
 }
 
 my $root     = Cwd::abs_path($dir) // $dir;
-my $findings = Envdoctor::Scanner::scan($root);
+my $findings = App::Envdoctor::Scanner::scan($root);
 my @errors   = grep { $_->{severity} eq 'error' } @$findings;
 my @warnings = grep { $_->{severity} eq 'warning' } @$findings;
 

@@ -1,4 +1,4 @@
-package Envdoctor::Scanner;
+package App::Envdoctor::Scanner;
 
 # Core scanner: reconcile %ENV access in Perl source against .env definitions.
 # Local-first — no network, values never printed.

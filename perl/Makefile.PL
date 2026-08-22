@@ -3,8 +3,8 @@ use warnings;
 use ExtUtils::MakeMaker;
 
 WriteMakefile(
-    NAME          => 'Envdoctor',
-    VERSION_FROM  => 'lib/Envdoctor/Scanner.pm',
+    NAME          => 'App::Envdoctor',
+    VERSION_FROM  => 'lib/App/Envdoctor.pm',
     ABSTRACT      => 'Local-first consistency checker for environment variables (native Perl port)',
     AUTHOR        => 'Arun Natesan',
     LICENSE       => 'mit',
