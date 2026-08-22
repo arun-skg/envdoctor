@@ -140,13 +140,12 @@ envdoctor scan --strict       # treat warnings as errors too
 > name is blocked as too similar to an existing project), but the installed
 > command and importable package are both `envdoctor`.
 
-Each port has its own README, test suite, and CI workflow. Every native port
-detects the same four rules — **missing** / undefined-in-source, **unused**,
-**duplicates**, and **public-prefix** (a secret-looking variable leaked through
-a client prefix like `NEXT_PUBLIC_`). The Node implementation is the reference
-and adds the rest — type mismatch, schema validation, weak-secret and typo
-detection, environment diffs, plus scanning Docker Compose, Kubernetes and
-GitHub Actions and the `init`/`diff`/`sync`/`fix` subcommands.
+Each port has its own README, test suite, and CI workflow, and they are kept
+**behaviour-identical** — the same project produces byte-for-byte-equivalent
+findings (and `--json` output) in every language. All six native ports now
+detect **nine rules**; only `schema-validation` (which needs a config file),
+the extra YAML sources, and the `init`/`diff`/`sync`/`fix` subcommands remain
+Node-only.
 
 | Detector | Node | Python · Go · Ruby · PHP · Perl · Java |
 |---|:---:|:---:|
@@ -154,8 +153,14 @@ GitHub Actions and the `init`/`diff`/`sync`/`fix` subcommands.
 | unused | ✅ | ✅ |
 | duplicates | ✅ | ✅ |
 | public-prefix (secret leak) | ✅ | ✅ |
-| type-mismatch · schema · weak-secret · typo · env-diff | ✅ | — |
+| weak-secret | ✅ | ✅ |
+| typo (did-you-mean) | ✅ | ✅ |
+| environment-diff | ✅ | ✅ |
+| type-mismatch | ✅ | ✅ |
+| schema-validation | ✅ | — |
+| `--json` output | ✅ | ✅ |
 | Docker Compose · Kubernetes · GitHub Actions sources | ✅ | — |
+| `init` · `diff` · `sync` · `fix` subcommands | ✅ | — |
 
 > **Note:** run `npx @arunskg/envdoctor` from your project directory, not from
 > inside a checkout of this repo — npx resolves the local package first, whose
