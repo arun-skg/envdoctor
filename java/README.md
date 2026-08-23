@@ -69,6 +69,19 @@ javac -d out src/main/java/com/envdoctor/*.java
 java -cp out com.envdoctor.Cli scan --dir .
 ```
 
+## Subcommands
+
+Alongside `scan`, every port shares two environment subcommands:
+
+```bash
+envdoctor diff <envA> <envB>       # compare two environments (add --json)
+envdoctor sync <from> <to>         # copy missing keys (add --dry-run)
+```
+
+`diff` reports which variable names are only in one environment; `sync` appends
+the missing keys to the target `.env` file as empty `KEY=` placeholders — values
+are never copied.
+
 ## Other languages
 
 envdoctor ships as a standalone native port for each ecosystem:

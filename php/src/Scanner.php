@@ -215,6 +215,69 @@ final class Scanner
     }
 
     /** @return Finding[] */
+    /**
+     * Map each environment label to the sorted list of variable names in it.
+     *
+     * @return array<string, string[]>
+     */
+    public static function definedByLabel(string $root): array
+    {
+        $root = rtrim($root, DIRECTORY_SEPARATOR);
+        $labels = [];
+        foreach (self::discoverFiles($root, '', true) as $f) {
+            $label = self::envLabel($f);
+            $labels[$label] ??= [];
+            foreach (array_keys(self::parseEnv((string) file_get_contents($f))) as $name) {
+                if (!in_array($name, $labels[$label], true)) {
+                    $labels[$label][] = $name;
+                }
+            }
+        }
+
+        return $labels;
+    }
+
+    /** @return array{onlyInA: string[], onlyInB: string[], common: string[]} */
+    public static function diffLabels(string $root, string $a, string $b): array
+    {
+        $labels = self::definedByLabel($root);
+        $da = $labels[$a] ?? [];
+        $db = $labels[$b] ?? [];
+        $sort = static function (array $x): array {
+            sort($x);
+            return array_values($x);
+        };
+
+        return [
+            'onlyInA' => $sort(array_diff($da, $db)),
+            'onlyInB' => $sort(array_diff($db, $da)),
+            'common' => $sort(array_intersect($da, $db)),
+        ];
+    }
+
+    /**
+     * Append keys present in `from` but missing from `to` as `KEY=` placeholders.
+     * Values are never copied.
+     *
+     * @return string[]
+     */
+    public static function syncLabels(string $root, string $from, string $to, bool $dryRun = false): array
+    {
+        $root = rtrim($root, DIRECTORY_SEPARATOR);
+        $labels = self::definedByLabel($root);
+        $missing = array_values(array_diff($labels[$from] ?? [], $labels[$to] ?? []));
+        sort($missing);
+        if ($missing && !$dryRun) {
+            $target = $root . DIRECTORY_SEPARATOR . ($to === 'default' ? '.env' : ".env.$to");
+            $existing = is_file($target) ? (string) file_get_contents($target) : '';
+            $prefix = ($existing === '' || str_ends_with($existing, "\n")) ? '' : "\n";
+            $append = $prefix . implode('', array_map(static fn($k) => "$k=\n", $missing));
+            file_put_contents($target, $append, FILE_APPEND);
+        }
+
+        return $missing;
+    }
+
     public static function scan(string $root): array
     {
         $root = rtrim($root, DIRECTORY_SEPARATOR);

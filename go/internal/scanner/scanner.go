@@ -515,3 +515,116 @@ func sortedStrings(m map[string]string) []string {
 	sort.Strings(keys)
 	return keys
 }
+
+// DefinedByLabel maps each environment label to the set of variable names
+// defined in it (across all matching .env files).
+func DefinedByLabel(root string) (map[string]map[string]bool, error) {
+	labels := map[string]map[string]bool{}
+	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if info.IsDir() {
+			if skipDir(info.Name()) {
+				return filepath.SkipDir
+			}
+			return nil
+		}
+		if !isEnvFile(info.Name()) {
+			return nil
+		}
+		data, readErr := os.ReadFile(path)
+		if readErr != nil {
+			return readErr
+		}
+		rel, _ := filepath.Rel(root, path)
+		label := envLabel(info.Name())
+		set := labels[label]
+		if set == nil {
+			set = map[string]bool{}
+			labels[label] = set
+		}
+		for k := range ParseEnv(rel, string(data)) {
+			set[k] = true
+		}
+		return nil
+	})
+	return labels, err
+}
+
+func sortedSet(s map[string]bool) []string {
+	out := make([]string, 0, len(s))
+	for k := range s {
+		out = append(out, k)
+	}
+	sort.Strings(out)
+	return out
+}
+
+// Diff is the result of comparing two environment labels.
+type Diff struct {
+	OnlyInA []string `json:"onlyInA"`
+	OnlyInB []string `json:"onlyInB"`
+	Common  []string `json:"common"`
+}
+
+// DiffLabels compares the variable names defined in labels a and b.
+func DiffLabels(root, a, b string) (Diff, error) {
+	labels, err := DefinedByLabel(root)
+	if err != nil {
+		return Diff{}, err
+	}
+	da, db := labels[a], labels[b]
+	d := Diff{OnlyInA: []string{}, OnlyInB: []string{}, Common: []string{}}
+	for _, k := range sortedSet(da) {
+		if db[k] {
+			d.Common = append(d.Common, k)
+		} else {
+			d.OnlyInA = append(d.OnlyInA, k)
+		}
+	}
+	for _, k := range sortedSet(db) {
+		if !da[k] {
+			d.OnlyInB = append(d.OnlyInB, k)
+		}
+	}
+	return d, nil
+}
+
+// SyncLabels appends keys present in `from` but missing from `to` to to's file
+// as `KEY=` placeholders. Values are never copied.
+func SyncLabels(root, from, to string, dryRun bool) ([]string, error) {
+	labels, err := DefinedByLabel(root)
+	if err != nil {
+		return nil, err
+	}
+	missing := []string{}
+	for _, k := range sortedSet(labels[from]) {
+		if !labels[to][k] {
+			missing = append(missing, k)
+		}
+	}
+	if len(missing) > 0 && !dryRun {
+		target := filepath.Join(root, ".env")
+		if to != "default" {
+			target = filepath.Join(root, ".env."+to)
+		}
+		existing, _ := os.ReadFile(target)
+		var b strings.Builder
+		if len(existing) > 0 && existing[len(existing)-1] != '\n' {
+			b.WriteString("\n")
+		}
+		for _, k := range missing {
+			b.WriteString(k + "=\n")
+		}
+		f, ferr := os.OpenFile(target, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
+		if ferr != nil {
+			return nil, ferr
+		}
+		defer f.Close()
+		if _, werr := f.WriteString(b.String()); werr != nil {
+			return nil, werr
+		}
+	}
+	return missing, nil
+}

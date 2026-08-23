@@ -1,6 +1,7 @@
 package com.envdoctor;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 
 /** Command-line entry point for the native Java envdoctor. */
@@ -13,6 +14,13 @@ public final class Cli {
     }
 
     public static int run(String[] args) {
+        if (args.length > 0 && args[0].equals("diff")) {
+            return runDiff(args);
+        }
+        if (args.length > 0 && args[0].equals("sync")) {
+            return runSync(args);
+        }
+
         String dir = ".";
         boolean strict = false;
         boolean json = false;
@@ -60,6 +68,94 @@ public final class Cli {
         System.out.printf("%nSummary: %d error(s), %d warning(s)%n", errors.size(), warnings.size());
 
         return (!errors.isEmpty() || (strict && !warnings.isEmpty())) ? 1 : 0;
+    }
+
+    private record Sub(List<String> pos, String dir, boolean dryRun, boolean json) {}
+
+    private static Sub parseSub(String[] args) {
+        List<String> pos = new ArrayList<>();
+        String dir = ".";
+        boolean dry = false;
+        boolean json = false;
+        for (int i = 1; i < args.length; i++) {
+            String a = args[i];
+            if ((a.equals("-d") || a.equals("--dir")) && i + 1 < args.length) {
+                dir = args[++i];
+            } else if (a.startsWith("--dir=")) {
+                dir = a.substring("--dir=".length());
+            } else if (a.equals("--dry-run")) {
+                dry = true;
+            } else if (a.equals("--json")) {
+                json = true;
+            } else {
+                pos.add(a);
+            }
+        }
+        return new Sub(pos, dir, dry, json);
+    }
+
+    private static String jsonArray(List<String> xs) {
+        StringBuilder b = new StringBuilder("[");
+        for (int i = 0; i < xs.size(); i++) {
+            if (i > 0) {
+                b.append(',');
+            }
+            b.append(quote(xs.get(i)));
+        }
+        return b.append(']').toString();
+    }
+
+    static int runDiff(String[] args) {
+        Sub s = parseSub(args);
+        String a = s.pos.size() > 0 ? s.pos.get(0) : "";
+        String b = s.pos.size() > 1 ? s.pos.get(1) : "";
+        Scanner.Diff d = Scanner.diffLabels(Path.of(s.dir).toAbsolutePath().normalize(), a, b);
+        if (s.json) {
+            System.out.println("{\"a\":" + quote(a) + ",\"b\":" + quote(b)
+                    + ",\"onlyInA\":" + jsonArray(d.onlyInA())
+                    + ",\"onlyInB\":" + jsonArray(d.onlyInB())
+                    + ",\"common\":" + jsonArray(d.common()) + "}");
+            return 0;
+        }
+        System.out.println("ENVIRONMENT DIFF: " + a + " vs " + b);
+        System.out.println("=".repeat(40));
+        if (!d.onlyInA().isEmpty()) {
+            System.out.println("Only in " + a + ":");
+            for (String k : d.onlyInA()) {
+                System.out.println("  + " + k);
+            }
+        }
+        if (!d.onlyInB().isEmpty()) {
+            System.out.println("Only in " + b + ":");
+            for (String k : d.onlyInB()) {
+                System.out.println("  + " + k);
+            }
+        }
+        System.out.println("Common: " + d.common().size() + " variable(s)");
+        return 0;
+    }
+
+    static int runSync(String[] args) {
+        Sub s = parseSub(args);
+        String from = s.pos.size() > 0 ? s.pos.get(0) : "";
+        String to = s.pos.size() > 1 ? s.pos.get(1) : "";
+        List<String> added = Scanner.syncLabels(Path.of(s.dir).toAbsolutePath().normalize(), from, to, s.dryRun);
+        if (s.json) {
+            System.out.println("{\"from\":" + quote(from) + ",\"to\":" + quote(to)
+                    + ",\"added\":" + jsonArray(added)
+                    + ",\"dryRun\":" + (s.dryRun ? "true" : "false") + "}");
+            return 0;
+        }
+        if (added.isEmpty()) {
+            System.out.println("Already in sync.");
+            return 0;
+        }
+        String verb = s.dryRun ? "Would sync" : "Synced";
+        System.out.printf("%s %d variable(s) from %s to %s:%n", verb, added.size(), from, to);
+        for (String k : added) {
+            System.out.println("  + " + k);
+        }
+        return 0;
     }
 
     /** Hand-built JSON array; keys exactly rule, severity, name, message, file, line. */

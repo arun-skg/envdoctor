@@ -208,4 +208,22 @@ class ScannerTest {
         }
         assertTrue(lastError < firstWarning);
     }
+
+    @Test
+    void diffAndSync(@TempDir Path dir) throws IOException {
+        Files.writeString(dir.resolve(".env"), "A=1\nB=2\n");
+        Files.writeString(dir.resolve(".env.production"), "A=9\n");
+
+        Scanner.Diff d = Scanner.diffLabels(dir, "default", "production");
+        assertEquals(List.of("B"), d.onlyInA());
+        assertTrue(d.onlyInB().isEmpty());
+        assertEquals(List.of("A"), d.common());
+
+        assertEquals(List.of("B"), Scanner.syncLabels(dir, "default", "production", true));
+        assertFalse(Files.readString(dir.resolve(".env.production")).contains("B="));
+
+        assertEquals(List.of("B"), Scanner.syncLabels(dir, "default", "production", false));
+        String prod = Files.readString(dir.resolve(".env.production"));
+        assertTrue(prod.contains("B=\n") && prod.contains("A=9") && !prod.contains("B=2"));
+    }
 }

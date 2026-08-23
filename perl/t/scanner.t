@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 28;
+use Test::More tests => 34;
 use File::Temp ();
 use File::Spec ();
 use FindBin ();
@@ -127,3 +127,25 @@ close $s5;
 my $f5 = App::Envdoctor::Scanner::scan("$dir5");
 ok( !( grep { $_->{rule} eq 'type-mismatch' } @$f5 ),
     'two integers across envs -> no type-mismatch' );
+
+# diff + sync subcommands
+{
+    my $d2 = File::Temp->newdir;
+    open my $e, '>', File::Spec->catfile( "$d2", '.env' ) or die $!;
+    print {$e} "A=1\nB=2\n"; close $e;
+    open my $p, '>', File::Spec->catfile( "$d2", '.env.production' ) or die $!;
+    print {$p} "A=9\n"; close $p;
+
+    my $diff = App::Envdoctor::Scanner::diff_labels( "$d2", 'default', 'production' );
+    is_deeply( $diff->{onlyInA}, ['B'], 'diff onlyInA' );
+    is_deeply( $diff->{onlyInB}, [],    'diff onlyInB' );
+    is_deeply( $diff->{common},  ['A'], 'diff common' );
+
+    my $dry = App::Envdoctor::Scanner::sync_labels( "$d2", 'default', 'production', 1 );
+    is_deeply( $dry, ['B'], 'sync --dry-run reports B' );
+    unlike( App::Envdoctor::Scanner::_read( File::Spec->catfile("$d2",'.env.production') ), qr/B=/, 'dry-run does not write' );
+
+    App::Envdoctor::Scanner::sync_labels( "$d2", 'default', 'production', 0 );
+    my $prod = App::Envdoctor::Scanner::_read( File::Spec->catfile("$d2",'.env.production') );
+    ok( $prod =~ /B=\n/ && $prod =~ /A=9/ && $prod !~ /B=2/, 'sync appends B= without value' );
+}

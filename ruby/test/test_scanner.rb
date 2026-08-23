@@ -153,4 +153,20 @@ class ScannerTest < Minitest::Test
       refute_includes json, "changeme"
     end
   end
+  def test_diff_and_sync
+    Dir.mktmpdir do |dir|
+      File.write(File.join(dir, ".env"), "A=1\nB=2\n")
+      File.write(File.join(dir, ".env.production"), "A=9\n")
+      d = Envdoctor::Scanner.diff_labels(dir, "default", "production")
+      assert_equal({ "onlyInA" => ["B"], "onlyInB" => [], "common" => ["A"] }, d)
+      assert_equal ["B"], Envdoctor::Scanner.sync_labels(dir, "default", "production", dry_run: true)
+      refute_includes File.read(File.join(dir, ".env.production")), "B="
+      assert_equal ["B"], Envdoctor::Scanner.sync_labels(dir, "default", "production")
+      prod = File.read(File.join(dir, ".env.production"))
+      assert_includes prod, "B=\n"
+      assert_includes prod, "A=9"
+      refute_includes prod, "B=2"
+    end
+  end
+
 end

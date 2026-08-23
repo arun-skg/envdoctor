@@ -539,6 +539,86 @@ public final class Scanner {
         return findings;
     }
 
+    /** Map each environment label to the set of variable names defined in it. */
+    public static Map<String, java.util.Set<String>> definedByLabel(Path root) {
+        Map<String, java.util.Set<String>> labels = new LinkedHashMap<>();
+        try (Stream<Path> walk = Files.walk(root)) {
+            walk.filter(Files::isRegularFile)
+                .filter(Scanner::notIgnored)
+                .sorted()
+                .forEach(path -> {
+                    String name = path.getFileName().toString();
+                    String label = envLabel(name);
+                    boolean isEnv = label != null
+                            && (name.equals(".env") || name.startsWith(".env."));
+                    if (!isEnv) {
+                        return;
+                    }
+                    java.util.Set<String> set =
+                            labels.computeIfAbsent(label, k -> new java.util.TreeSet<>());
+                    set.addAll(parseEnv(read(path)).keySet());
+                });
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+        return labels;
+    }
+
+    /** Result of comparing two environment labels. */
+    public record Diff(List<String> onlyInA, List<String> onlyInB, List<String> common) {}
+
+    public static Diff diffLabels(Path root, String a, String b) {
+        Map<String, java.util.Set<String>> labels = definedByLabel(root);
+        java.util.Set<String> da = labels.getOrDefault(a, java.util.Set.of());
+        java.util.Set<String> db = labels.getOrDefault(b, java.util.Set.of());
+        List<String> onlyA = new ArrayList<>();
+        List<String> common = new ArrayList<>();
+        for (String k : new java.util.TreeSet<>(da)) {
+            (db.contains(k) ? common : onlyA).add(k);
+        }
+        List<String> onlyB = new ArrayList<>();
+        for (String k : new java.util.TreeSet<>(db)) {
+            if (!da.contains(k)) {
+                onlyB.add(k);
+            }
+        }
+        return new Diff(onlyA, onlyB, common);
+    }
+
+    /**
+     * Append keys present in {@code from} but missing from {@code to} as
+     * {@code KEY=} placeholders. Values are never copied.
+     */
+    public static List<String> syncLabels(Path root, String from, String to, boolean dryRun) {
+        Map<String, java.util.Set<String>> labels = definedByLabel(root);
+        java.util.Set<String> df = labels.getOrDefault(from, java.util.Set.of());
+        java.util.Set<String> dt = labels.getOrDefault(to, java.util.Set.of());
+        List<String> missing = new ArrayList<>();
+        for (String k : new java.util.TreeSet<>(df)) {
+            if (!dt.contains(k)) {
+                missing.add(k);
+            }
+        }
+        if (!missing.isEmpty() && !dryRun) {
+            Path target = root.resolve(to.equals("default") ? ".env" : ".env." + to);
+            try {
+                String existing = Files.exists(target) ? Files.readString(target) : "";
+                StringBuilder sb = new StringBuilder();
+                if (!existing.isEmpty() && !existing.endsWith("\n")) {
+                    sb.append("\n");
+                }
+                for (String k : missing) {
+                    sb.append(k).append("=\n");
+                }
+                Files.writeString(target, sb.toString(),
+                        java.nio.file.StandardOpenOption.CREATE, java.nio.file.StandardOpenOption.APPEND);
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+        }
+        return missing;
+    }
+
     private static boolean notIgnored(Path path) {
         for (Path part : path) {
             String s = part.toString();

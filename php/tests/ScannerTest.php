@@ -169,5 +169,19 @@ foreach ($arr as $obj) {
 check($shapeOk, 'each JSON object has exactly the required keys');
 check(!str_contains($jsonStr, 'supersecretvalue') && !str_contains($jsonStr, 'changeme'), 'no value strings leak into JSON');
 
+
+// diff + sync subcommands
+$dir2 = sys_get_temp_dir() . '/envd_php_sub_' . uniqid();
+mkdir($dir2);
+file_put_contents("$dir2/.env", "A=1\nB=2\n");
+file_put_contents("$dir2/.env.production", "A=9\n");
+$d = Scanner::diffLabels($dir2, 'default', 'production');
+check($d === ['onlyInA' => ['B'], 'onlyInB' => [], 'common' => ['A']], 'diff default vs production');
+check(Scanner::syncLabels($dir2, 'default', 'production', true) === ['B'], 'sync --dry-run reports B');
+check(!str_contains(file_get_contents("$dir2/.env.production"), 'B='), 'dry-run does not write');
+check(Scanner::syncLabels($dir2, 'default', 'production') === ['B'], 'sync appends B');
+$prod = file_get_contents("$dir2/.env.production");
+check(str_contains($prod, "B=\n") && str_contains($prod, 'A=9') && !str_contains($prod, 'B=2'), 'sync copies no value');
+
 echo $failures === 0 ? "\nAll tests passed\n" : "\n$failures test(s) failed\n";
 exit($failures === 0 ? 0 : 1);

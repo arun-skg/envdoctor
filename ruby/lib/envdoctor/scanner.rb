@@ -149,6 +149,41 @@ module Envdoctor
       end.sort
     end
 
+    # Map each environment label to the set of variable names defined in it.
+    def defined_by_label(root)
+      labels = {}
+      discover_env_files(root).each do |f|
+        set = (labels[env_label(f)] ||= [])
+        parse_env(f, File.read(f)).each_key { |name| set << name unless set.include?(name) }
+      end
+      labels
+    end
+
+    def diff_labels(root, a, b)
+      labels = defined_by_label(root)
+      da = labels[a] || []
+      db = labels[b] || []
+      {
+        "onlyInA" => (da - db).sort,
+        "onlyInB" => (db - da).sort,
+        "common" => (da & db).sort
+      }
+    end
+
+    # Append keys present in `from` but missing from `to` as `KEY=` placeholders.
+    # Values are never copied.
+    def sync_labels(root, from, to, dry_run: false)
+      labels = defined_by_label(root)
+      missing = ((labels[from] || []) - (labels[to] || [])).sort
+      if !missing.empty? && !dry_run
+        target = File.join(root, to == "default" ? ".env" : ".env.#{to}")
+        existing = File.exist?(target) ? File.read(target) : ""
+        prefix = (existing.empty? || existing.end_with?("\n")) ? "" : "\n"
+        File.open(target, "a") { |fh| fh.write(prefix + missing.map { |k| "#{k}=\n" }.join) }
+      end
+      missing
+    end
+
     def scan(root)
       defined = {}          # name => Origin (first definition wins)
       defined_value = {}    # name => value at first definition

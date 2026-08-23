@@ -185,3 +185,23 @@ def test_finding_to_dict_shape(tmp_path):
     d = finding_to_dict(result.findings[0], tmp_path)
     assert d["file"] == ".env"
     assert isinstance(d["line"], int)
+
+
+def test_diff_and_sync(tmp_path):
+    from envdoctor.scanner import diff_labels, sync_labels
+
+    (tmp_path / ".env").write_text("A=1\nB=2\n")
+    (tmp_path / ".env.production").write_text("A=9\n")
+
+    d = diff_labels(tmp_path, "default", "production")
+    assert d == {"onlyInA": ["B"], "onlyInB": [], "common": ["A"]}
+
+    # dry-run does not write
+    assert sync_labels(tmp_path, "default", "production", dry_run=True) == ["B"]
+    assert "B=" not in (tmp_path / ".env.production").read_text()
+
+    # real sync appends B= (no value copied) and leaves A's value intact
+    assert sync_labels(tmp_path, "default", "production") == ["B"]
+    prod = (tmp_path / ".env.production").read_text()
+    assert "B=\n" in prod and "A=9" in prod and "B=2" not in prod
+    assert diff_labels(tmp_path, "default", "production")["common"] == ["A", "B"]

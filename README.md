@@ -143,9 +143,9 @@ envdoctor scan --strict       # treat warnings as errors too
 Each port has its own README, test suite, and CI workflow, and they are kept
 **behaviour-identical** — the same project produces byte-for-byte-equivalent
 findings (and `--json` output) in every language. All six native ports now
-detect **nine rules**; only `schema-validation` (which needs a config file),
-the extra YAML sources, and the `init`/`diff`/`sync`/`fix` subcommands remain
-Node-only.
+detect **nine rules** and share the `scan` / `diff` / `sync` subcommands; only
+`schema-validation` (which needs a config file), the extra YAML sources, and
+the `init` / `fix` subcommands remain Node-only.
 
 | Detector | Node | Python · Go · Ruby · PHP · Perl · Java |
 |---|:---:|:---:|
@@ -159,8 +159,9 @@ Node-only.
 | type-mismatch | ✅ | ✅ |
 | schema-validation | ✅ | — |
 | `--json` output | ✅ | ✅ |
+| `diff` · `sync` subcommands | ✅ | ✅ |
 | Docker Compose · Kubernetes · GitHub Actions sources | ✅ | — |
-| `init` · `diff` · `sync` · `fix` subcommands | ✅ | — |
+| `init` · `fix` subcommands | ✅ | — |
 
 > **Note:** run `npx @arunskg/envdoctor` from your project directory, not from
 > inside a checkout of this repo — npx resolves the local package first, whose

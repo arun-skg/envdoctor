@@ -210,6 +210,51 @@ sub _find_files {
     return sort @out;
 }
 
+# Map each environment label to a hashref set of variable names defined in it.
+sub defined_by_label {
+    my ($root) = @_;
+    my %labels;
+    for my $f ( _find_files( $root, 'env' ) ) {
+        my ( undef, undef, $base ) = File::Spec->splitpath($f);
+        my $label = env_label($base);
+        next unless defined $label;
+        my $d = parse_env( _rel( $root, $f ), _read($f) );
+        $labels{$label}{$_} = 1 for keys %$d;
+    }
+    return \%labels;
+}
+
+sub diff_labels {
+    my ( $root, $a, $b ) = @_;
+    my $labels = defined_by_label($root);
+    my %da     = %{ $labels->{$a} || {} };
+    my %db     = %{ $labels->{$b} || {} };
+    return {
+        onlyInA => [ sort grep { !$db{$_} } keys %da ],
+        onlyInB => [ sort grep { !$da{$_} } keys %db ],
+        common  => [ sort grep { $db{$_} } keys %da ],
+    };
+}
+
+# Append keys present in `from` but missing from `to` as `KEY=` placeholders.
+# Values are never copied.
+sub sync_labels {
+    my ( $root, $from, $to, $dry_run ) = @_;
+    my $labels  = defined_by_label($root);
+    my %df      = %{ $labels->{$from} || {} };
+    my %dt      = %{ $labels->{$to} || {} };
+    my @missing = sort grep { !$dt{$_} } keys %df;
+    if ( @missing && !$dry_run ) {
+        my $target = File::Spec->catfile( $root, $to eq 'default' ? '.env' : ".env.$to" );
+        my $existing = -e $target ? _read($target) : '';
+        my $prefix = ( $existing eq '' || $existing =~ /\n\z/ ) ? '' : "\n";
+        open my $fh, '>>', $target or die "cannot append $target: $!";
+        print {$fh} $prefix . join( '', map {"$_=\n"} @missing );
+        close $fh;
+    }
+    return \@missing;
+}
+
 sub scan {
     my ($root) = @_;
     my ( %def, %used, @dupes );

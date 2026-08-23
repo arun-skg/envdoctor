@@ -201,6 +201,44 @@ def discover_env_files(root: Path) -> list[Path]:
     return files
 
 
+def defined_by_label(root: Path) -> dict[str, set[str]]:
+    """Map each environment label to the set of variable names defined in it."""
+    labels: dict[str, set[str]] = {}
+    for env_file in discover_env_files(root):
+        names = labels.setdefault(env_label(env_file.name), set())
+        for name in parse_env_file(env_file):
+            names.add(name)
+    return labels
+
+
+def diff_labels(root: Path, a: str, b: str) -> dict[str, list[str]]:
+    """Compare the variable names defined in two environment labels."""
+    labels = defined_by_label(root)
+    da = labels.get(a, set())
+    db = labels.get(b, set())
+    return {
+        "onlyInA": sorted(da - db),
+        "onlyInB": sorted(db - da),
+        "common": sorted(da & db),
+    }
+
+
+def sync_labels(root: Path, src: str, dst: str, dry_run: bool = False) -> list[str]:
+    """Append keys present in ``src`` but missing from ``dst`` to dst's file.
+
+    Values are never copied — only ``KEY=`` placeholders are written.
+    """
+    labels = defined_by_label(root)
+    missing = sorted(labels.get(src, set()) - labels.get(dst, set()))
+    if missing and not dry_run:
+        target = root / (".env" if dst == "default" else f".env.{dst}")
+        existing = target.read_text() if target.exists() else ""
+        prefix = "" if existing == "" or existing.endswith("\n") else "\n"
+        with target.open("a") as fh:
+            fh.write(prefix + "".join(f"{k}=\n" for k in missing))
+    return missing
+
+
 def discover_source_files(root: Path, extensions: Iterable[str] = ("py",)) -> list[Path]:
     exts = {e.lstrip(".").lower() for e in extensions}
     out: list[Path] = []

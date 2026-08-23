@@ -273,3 +273,34 @@ func names(fs []Finding) map[string]bool {
 	}
 	return m
 }
+
+func TestDiffAndSync(t *testing.T) {
+	dir := t.TempDir()
+	must(t, filepath.Join(dir, ".env"), "A=1\nB=2\n")
+	must(t, filepath.Join(dir, ".env.production"), "A=9\n")
+
+	d, err := DiffLabels(dir, "default", "production")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(d.OnlyInA) != 1 || d.OnlyInA[0] != "B" || len(d.OnlyInB) != 0 || len(d.Common) != 1 || d.Common[0] != "A" {
+		t.Fatalf("unexpected diff: %+v", d)
+	}
+
+	// dry-run does not write
+	m, _ := SyncLabels(dir, "default", "production", true)
+	if len(m) != 1 || m[0] != "B" {
+		t.Fatalf("dry-run missing: %v", m)
+	}
+	data, _ := os.ReadFile(filepath.Join(dir, ".env.production"))
+	if strings.Contains(string(data), "B=") {
+		t.Fatal("dry-run should not write")
+	}
+
+	// real sync appends B= (no value), keeps A's value
+	SyncLabels(dir, "default", "production", false)
+	data, _ = os.ReadFile(filepath.Join(dir, ".env.production"))
+	if !strings.Contains(string(data), "B=\n") || !strings.Contains(string(data), "A=9") || strings.Contains(string(data), "B=2") {
+		t.Fatalf("bad synced file: %q", string(data))
+	}
+}
