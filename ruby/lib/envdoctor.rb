@@ -4,5 +4,5 @@ require_relative "envdoctor/scanner"
 require_relative "envdoctor/cli"
 
 module Envdoctor
-  VERSION = "0.1.1"
+  VERSION = "0.1.2"
 end
