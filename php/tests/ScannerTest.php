@@ -251,5 +251,19 @@ $out = ob_get_clean();
 check(str_contains($out, 'wrote .env.example') && str_contains($out, 'wrote ENVIRONMENT.md'), 'fix rewrites both files');
 check(file_get_contents("$gdir/.env.example") === $EXAMPLE, 'fix restored exact .env.example');
 
+
+// schema-validation
+$dir3 = sys_get_temp_dir() . '/envd_php_schema_' . uniqid();
+mkdir($dir3);
+file_put_contents("$dir3/.env", "PORT=99999\nLEVEL=verbose\nAPI=ftp://x\nGOOD=info\n");
+file_put_contents("$dir3/envdoctor.schema.json", '{"PORT":{"type":"integer","max":65535},"LEVEL":{"enum":["debug","info"]},"API":{"type":"url"},"MISSING":{"type":"string"},"GOOD":{"enum":["info","warn"]}}');
+$sf = [];
+foreach (Scanner::scan($dir3) as $f) { if ($f->rule === 'schema-validation') { $sf[$f->name] = $f->message; } }
+check(($sf['PORT'] ?? '') === 'value exceeds the maximum', 'schema PORT max');
+check(($sf['LEVEL'] ?? '') === 'value is not one of the allowed values', 'schema LEVEL enum');
+check(($sf['API'] ?? '') === 'value does not match schema type url', 'schema API type');
+check(($sf['MISSING'] ?? '') === 'required by schema but not defined', 'schema MISSING required');
+check(!isset($sf['GOOD']), 'schema GOOD passes');
+
 echo $failures === 0 ? "\nAll tests passed\n" : "\n$failures test(s) failed\n";
 exit($failures === 0 ? 0 : 1);

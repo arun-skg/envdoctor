@@ -142,10 +142,10 @@ envdoctor scan --strict       # treat warnings as errors too
 
 Each port has its own README, test suite, and CI workflow, and they are kept
 **behaviour-identical** — the same project produces byte-for-byte-equivalent
-findings (and `--json` output) in every language. All six native ports now
-detect **nine rules** and share the `scan` / `diff` / `sync` subcommands; only
-`schema-validation` (which needs a config file), the extra YAML sources, and
-the `init` / `fix` subcommands remain Node-only.
+findings (and `--json` output) in every language. The native ports are now at
+**full feature parity** with the Node reference: all **ten detectors**, the
+`scan` / `diff` / `sync` / `init` / `fix` subcommands, `--json` output, and
+Docker Compose / Kubernetes / GitHub Actions scanning.
 
 | Detector | Node | Python · Go · Ruby · PHP · Perl · Java |
 |---|:---:|:---:|
@@ -157,11 +157,21 @@ the `init` / `fix` subcommands remain Node-only.
 | typo (did-you-mean) | ✅ | ✅ |
 | environment-diff | ✅ | ✅ |
 | type-mismatch | ✅ | ✅ |
-| schema-validation | ✅ | — |
+| schema-validation | ✅ | ✅ |
 | `--json` output | ✅ | ✅ |
-| `diff` · `sync` subcommands | ✅ | ✅ |
-| Docker Compose · Kubernetes · GitHub Actions sources | ✅ | — |
-| `init` · `fix` subcommands | ✅ | — |
+| `scan` · `diff` · `sync` · `init` · `fix` | ✅ | ✅ |
+| Docker Compose · Kubernetes · GitHub Actions sources | ✅ | ✅ |
+
+Schema validation reads an `envdoctor.schema.json` at the project root, e.g.:
+
+```json
+{
+  "PORT":  { "type": "integer", "min": 1, "max": 65535 },
+  "LEVEL": { "enum": ["debug", "info", "warn", "error"] },
+  "API":   { "type": "url" },
+  "TOKEN": { "type": "string", "optional": true }
+}
+```
 
 > **Note:** run `npx @arunskg/envdoctor` from your project directory, not from
 > inside a checkout of this repo — npx resolves the local package first, whose

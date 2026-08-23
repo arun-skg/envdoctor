@@ -462,6 +462,43 @@ func Scan(root string) (Result, error) {
 		}
 	}
 
+	// schema-validation: values must satisfy envdoctor.schema.json rules.
+	schema := loadSchema(root)
+	schemaNames := make([]string, 0, len(schema))
+	for name := range schema {
+		schemaNames = append(schemaNames, name)
+	}
+	sort.Strings(schemaNames)
+	for _, name := range schemaNames {
+		rule, ok := schema[name].(map[string]interface{})
+		if !ok {
+			continue
+		}
+		d, defok := defined[name]
+		if !defok {
+			if opt, _ := rule["optional"].(bool); !opt {
+				res.Findings = append(res.Findings, Finding{
+					Rule: "schema-validation", Severity: "error", Name: name,
+					Message: "required by schema but not defined",
+				})
+			}
+			continue
+		}
+		value, ok := d.values[envLabel(filepath.Base(d.origin.File))]
+		if !ok {
+			for _, label := range sortedStrings(d.values) {
+				value = d.values[label]
+				break
+			}
+		}
+		if msg := schemaFailure(rule, value); msg != "" {
+			res.Findings = append(res.Findings, Finding{
+				Rule: "schema-validation", Severity: "error", Name: name,
+				Message: msg, Origin: d.origin,
+			})
+		}
+	}
+
 	// --- Warnings, in rule order ---
 
 	// unused: defined but never referenced.
@@ -807,4 +844,72 @@ func SyncLabels(root, from, to string, dryRun bool) ([]string, error) {
 		}
 	}
 	return missing, nil
+}
+
+var schemaIntRe = regexp.MustCompile(`^-?\d+$`)
+var schemaFloatRe = regexp.MustCompile(`^-?\d+(\.\d+)?$`)
+var schemaNumericRe = regexp.MustCompile(`^-?\d+(\.\d+)?$`)
+
+func loadSchema(root string) map[string]interface{} {
+	data, err := os.ReadFile(filepath.Join(root, "envdoctor.schema.json"))
+	if err != nil {
+		return nil
+	}
+	var raw map[string]interface{}
+	if json.Unmarshal(data, &raw) != nil {
+		return nil
+	}
+	return raw
+}
+
+func schemaTypeOK(value, declared string) bool {
+	switch declared {
+	case "string":
+		return true
+	case "integer":
+		return schemaIntRe.MatchString(value)
+	case "float":
+		return schemaFloatRe.MatchString(value)
+	case "boolean":
+		lv := strings.ToLower(value)
+		return lv == "true" || lv == "false"
+	case "url":
+		return strings.HasPrefix(value, "http://") || strings.HasPrefix(value, "https://")
+	case "json":
+		return json.Valid([]byte(value))
+	}
+	return true
+}
+
+func schemaFailure(rule map[string]interface{}, value string) string {
+	if t, ok := rule["type"].(string); ok && !schemaTypeOK(value, t) {
+		return "value does not match schema type " + t
+	}
+	if enum, ok := rule["enum"].([]interface{}); ok {
+		found := false
+		for _, e := range enum {
+			if s, ok := e.(string); ok && s == value {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return "value is not one of the allowed values"
+		}
+	}
+	if pat, ok := rule["regex"].(string); ok {
+		if re, err := regexp.Compile(pat); err == nil && !re.MatchString(value) {
+			return "value does not match the required pattern"
+		}
+	}
+	if schemaNumericRe.MatchString(value) {
+		num, _ := strconv.ParseFloat(value, 64)
+		if lo, ok := rule["min"].(float64); ok && num < lo {
+			return "value is below the minimum"
+		}
+		if hi, ok := rule["max"].(float64); ok && num > hi {
+			return "value exceeds the maximum"
+		}
+	}
+	return ""
 }

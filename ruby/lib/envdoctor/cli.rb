@@ -44,13 +44,14 @@ module Envdoctor
         return 0
       end
 
+      loc = ->(f) { f.origin ? " #{f.origin.file}:#{f.origin.line}" : "" }
       unless errors.empty?
         puts "\nErrors"
-        errors.each { |f| puts "  x #{f.name} #{f.origin.file}:#{f.origin.line}  #{f.message}" }
+        errors.each { |f| puts "  x #{f.name}#{loc.call(f)}  #{f.message}" }
       end
       unless warnings.empty?
         puts "\nWarnings"
-        warnings.each { |f| puts "  ! #{f.name} #{f.origin.file}:#{f.origin.line}  #{f.message}" }
+        warnings.each { |f| puts "  ! #{f.name}#{loc.call(f)}  #{f.message}" }
       end
       puts "\nSummary: #{errors.length} error(s), #{warnings.length} warning(s)"
 

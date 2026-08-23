@@ -301,4 +301,23 @@ class ScannerTest {
         String prod = Files.readString(dir.resolve(".env.production"));
         assertTrue(prod.contains("B=\n") && prod.contains("A=9") && !prod.contains("B=2"));
     }
+
+    @Test
+    void schemaValidation(@TempDir Path dir) throws IOException {
+        Files.writeString(dir.resolve(".env"), "PORT=99999\nLEVEL=verbose\nAPI=ftp://x\nGOOD=info\n");
+        Files.writeString(dir.resolve("envdoctor.schema.json"),
+                "{\"PORT\":{\"type\":\"integer\",\"max\":65535},\"LEVEL\":{\"enum\":[\"debug\",\"info\"]},"
+                + "\"API\":{\"type\":\"url\"},\"MISSING\":{\"type\":\"string\"},\"GOOD\":{\"enum\":[\"info\",\"warn\"]}}");
+        java.util.Map<String, String> sf = new java.util.TreeMap<>();
+        for (Scanner.Finding f : Scanner.scan(dir)) {
+            if (f.rule().equals("schema-validation")) {
+                sf.put(f.name(), f.message());
+            }
+        }
+        assertEquals("value exceeds the maximum", sf.get("PORT"));
+        assertEquals("value is not one of the allowed values", sf.get("LEVEL"));
+        assertEquals("value does not match schema type url", sf.get("API"));
+        assertEquals("required by schema but not defined", sf.get("MISSING"));
+        assertFalse(sf.containsKey("GOOD"));
+    }
 }

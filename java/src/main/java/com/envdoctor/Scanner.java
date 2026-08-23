@@ -56,7 +56,7 @@ public final class Scanner {
 
     /** One reported issue. */
     public record Finding(String rule, String severity, String name, String message,
-                          String file, int line) {}
+                          String file, Integer line) {}
 
     private static String blank(String s) {
         StringBuilder b = new StringBuilder(s.length());
@@ -600,11 +600,37 @@ public final class Scanner {
             }
         }
 
+        // errors: schema-validation
+        List<Finding> schemaValidation = new ArrayList<>();
+        Map<String, Object> schema = loadSchema(root);
+        for (String name : new TreeSet<>(schema.keySet())) {
+            Object ruleObj = schema.get(name);
+            if (!(ruleObj instanceof Map)) {
+                continue;
+            }
+            @SuppressWarnings("unchecked")
+            Map<String, Object> rule = (Map<String, Object>) ruleObj;
+            if (definedFile.containsKey(name)) {
+                String msg = schemaFailure(rule, definedValue.get(name));
+                if (msg != null) {
+                    schemaValidation.add(new Finding("schema-validation", "error", name, msg,
+                            definedFile.get(name), definedLine.get(name)));
+                }
+            } else {
+                Object opt = rule.get("optional");
+                if (!(opt instanceof Boolean && (Boolean) opt)) {
+                    schemaValidation.add(new Finding("schema-validation", "error", name,
+                            "required by schema but not defined", null, null));
+                }
+            }
+        }
+
         List<Finding> findings = new ArrayList<>();
         findings.addAll(undefined);
         findings.addAll(duplicates);
         findings.addAll(publicPrefix);
         findings.addAll(typeMismatch);
+        findings.addAll(schemaValidation);
         findings.addAll(unused);
         findings.addAll(environmentDiff);
         findings.addAll(weakSecret);
@@ -761,6 +787,227 @@ public final class Scanner {
             }
         }
         return missing;
+    }
+
+    @SuppressWarnings("unchecked")
+    static Map<String, Object> loadSchema(Path root) {
+        Path p = root.resolve("envdoctor.schema.json");
+        if (!Files.exists(p)) {
+            return Map.of();
+        }
+        try {
+            Object parsed = new Json(Files.readString(p)).parse();
+            return parsed instanceof Map ? (Map<String, Object>) parsed : Map.of();
+        } catch (Exception e) {
+            return Map.of();
+        }
+    }
+
+    static boolean schemaTypeOk(String v, String declared) {
+        switch (declared) {
+            case "string": return true;
+            case "integer": return v.matches("-?\\d+");
+            case "float": return v.matches("-?\\d+(\\.\\d+)?");
+            case "boolean": return v.equalsIgnoreCase("true") || v.equalsIgnoreCase("false");
+            case "url": return v.startsWith("http://") || v.startsWith("https://");
+            case "json": return jsonValid(v);
+            default: return true;
+        }
+    }
+
+    private static boolean jsonValid(String v) {
+        try {
+            new Json(v).parse();
+            return true;
+        } catch (RuntimeException e) {
+            return false;
+        }
+    }
+
+    static String schemaFailure(Map<String, Object> rule, String value) {
+        Object t = rule.get("type");
+        if (t instanceof String && !schemaTypeOk(value, (String) t)) {
+            return "value does not match schema type " + t;
+        }
+        Object en = rule.get("enum");
+        if (en instanceof List) {
+            boolean found = false;
+            for (Object e : (List<?>) en) {
+                if (value.equals(e)) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                return "value is not one of the allowed values";
+            }
+        }
+        Object rx = rule.get("regex");
+        if (rx instanceof String) {
+            try {
+                if (!java.util.regex.Pattern.compile((String) rx).matcher(value).find()) {
+                    return "value does not match the required pattern";
+                }
+            } catch (RuntimeException ignore) {
+                // invalid pattern: skip
+            }
+        }
+        if (value.matches("-?\\d+(\\.\\d+)?")) {
+            double num = Double.parseDouble(value);
+            Object mn = rule.get("min");
+            if (mn instanceof Number && num < ((Number) mn).doubleValue()) {
+                return "value is below the minimum";
+            }
+            Object mx = rule.get("max");
+            if (mx instanceof Number && num > ((Number) mx).doubleValue()) {
+                return "value exceeds the maximum";
+            }
+        }
+        return null;
+    }
+
+    /** Minimal dependency-free JSON parser (objects, arrays, strings, numbers, bool, null). */
+    static final class Json {
+        private final String s;
+        private int i;
+
+        Json(String s) {
+            this.s = s;
+        }
+
+        Object parse() {
+            Object v = value();
+            ws();
+            if (i < s.length()) {
+                throw new RuntimeException("trailing data");
+            }
+            return v;
+        }
+
+        private Object value() {
+            ws();
+            char c = peek();
+            if (c == '{') return object();
+            if (c == '[') return array();
+            if (c == '"') return string();
+            if (c == 't' || c == 'f') return bool();
+            if (c == 'n') {
+                expect("null");
+                return null;
+            }
+            return number();
+        }
+
+        private Map<String, Object> object() {
+            Map<String, Object> m = new LinkedHashMap<>();
+            i++; // {
+            ws();
+            if (peek() == '}') {
+                i++;
+                return m;
+            }
+            while (true) {
+                ws();
+                String k = string();
+                ws();
+                if (s.charAt(i++) != ':') {
+                    throw new RuntimeException("expected :");
+                }
+                m.put(k, value());
+                ws();
+                char c = s.charAt(i++);
+                if (c == '}') return m;
+                if (c != ',') throw new RuntimeException("expected , or }");
+            }
+        }
+
+        private List<Object> array() {
+            List<Object> a = new ArrayList<>();
+            i++; // [
+            ws();
+            if (peek() == ']') {
+                i++;
+                return a;
+            }
+            while (true) {
+                a.add(value());
+                ws();
+                char c = s.charAt(i++);
+                if (c == ']') return a;
+                if (c != ',') throw new RuntimeException("expected , or ]");
+            }
+        }
+
+        private String string() {
+            if (s.charAt(i++) != '"') {
+                throw new RuntimeException("expected string");
+            }
+            StringBuilder b = new StringBuilder();
+            while (true) {
+                char c = s.charAt(i++);
+                if (c == '"') return b.toString();
+                if (c == '\\') {
+                    char e = s.charAt(i++);
+                    switch (e) {
+                        case '"': b.append('"'); break;
+                        case '\\': b.append('\\'); break;
+                        case '/': b.append('/'); break;
+                        case 'n': b.append('\n'); break;
+                        case 't': b.append('\t'); break;
+                        case 'r': b.append('\r'); break;
+                        case 'b': b.append('\b'); break;
+                        case 'f': b.append('\f'); break;
+                        case 'u':
+                            b.append((char) Integer.parseInt(s.substring(i, i + 4), 16));
+                            i += 4;
+                            break;
+                        default: throw new RuntimeException("bad escape");
+                    }
+                } else {
+                    b.append(c);
+                }
+            }
+        }
+
+        private Object bool() {
+            if (s.startsWith("true", i)) {
+                i += 4;
+                return Boolean.TRUE;
+            }
+            expect("false");
+            return Boolean.FALSE;
+        }
+
+        private Double number() {
+            int start = i;
+            while (i < s.length() && "-+.eE0123456789".indexOf(s.charAt(i)) >= 0) {
+                i++;
+            }
+            if (i == start) {
+                throw new RuntimeException("invalid value");
+            }
+            return Double.parseDouble(s.substring(start, i));
+        }
+
+        private void expect(String lit) {
+            if (!s.startsWith(lit, i)) {
+                throw new RuntimeException("expected " + lit);
+            }
+            i += lit.length();
+        }
+
+        private char peek() {
+            if (i >= s.length()) {
+                throw new RuntimeException("unexpected end");
+            }
+            return s.charAt(i);
+        }
+
+        private void ws() {
+            while (i < s.length() && Character.isWhitespace(s.charAt(i))) {
+                i++;
+            }
+        }
     }
 
     private static boolean notIgnored(Path path) {

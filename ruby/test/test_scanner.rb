@@ -278,4 +278,19 @@ class ScannerTest < Minitest::Test
     end
   end
 
+  def test_schema_validation
+    Dir.mktmpdir do |dir|
+      File.write(File.join(dir, ".env"), "PORT=99999\nLEVEL=verbose\nAPI=ftp://x\nGOOD=info\n")
+      File.write(File.join(dir, "envdoctor.schema.json"),
+                 %q({"PORT":{"type":"integer","max":65535},"LEVEL":{"enum":["debug","info"]},"API":{"type":"url"},"MISSING":{"type":"string"},"GOOD":{"enum":["info","warn"]}}))
+      findings = Envdoctor::Scanner.scan(dir)
+      schema = findings.select { |f| f.rule == "schema-validation" }.map { |f| [f.name, f.message] }.to_h
+      assert_equal({ "PORT" => "value exceeds the maximum",
+                     "LEVEL" => "value is not one of the allowed values",
+                     "API" => "value does not match schema type url",
+                     "MISSING" => "required by schema but not defined" }, schema)
+      refute schema.key?("GOOD")
+    end
+  end
+
 end

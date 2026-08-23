@@ -62,13 +62,13 @@ public final class Cli {
         if (!errors.isEmpty()) {
             System.out.println("\nErrors");
             for (Scanner.Finding f : errors) {
-                System.out.printf("  x %s %s:%d  %s%n", f.name(), f.file(), f.line(), f.message());
+                System.out.println("  x " + f.name() + loc(f) + "  " + f.message());
             }
         }
         if (!warnings.isEmpty()) {
             System.out.println("\nWarnings");
             for (Scanner.Finding f : warnings) {
-                System.out.printf("  ! %s %s:%d  %s%n", f.name(), f.file(), f.line(), f.message());
+                System.out.println("  ! " + f.name() + loc(f) + "  " + f.message());
             }
         }
         System.out.printf("%nSummary: %d error(s), %d warning(s)%n", errors.size(), warnings.size());
@@ -98,6 +98,10 @@ public final class Cli {
             }
         }
         return new Sub(pos, dir, dry, json);
+    }
+
+    private static String loc(Scanner.Finding f) {
+        return (f.file() == null || f.line() == null) ? "" : " " + f.file() + ":" + f.line();
     }
 
     private static String jsonArray(List<String> xs) {
@@ -238,7 +242,7 @@ public final class Cli {
               .append("\"name\":").append(quote(f.name())).append(',')
               .append("\"message\":").append(quote(f.message())).append(',')
               .append("\"file\":").append(f.file() == null ? "null" : quote(f.file())).append(',')
-              .append("\"line\":").append(f.line())
+              .append("\"line\":").append(f.line() == null ? "null" : f.line().toString())
               .append('}');
         }
         sb.append(']');

@@ -347,3 +347,35 @@ def test_diff_and_sync(tmp_path):
     prod = (tmp_path / ".env.production").read_text()
     assert "B=\n" in prod and "A=9" in prod and "B=2" not in prod
     assert diff_labels(tmp_path, "default", "production")["common"] == ["A", "B"]
+
+
+def test_schema_validation(tmp_path):
+    (tmp_path / ".env").write_text("PORT=99999\nLEVEL=verbose\nAPI=ftp://x\nGOOD=info\n")
+    (tmp_path / "envdoctor.schema.json").write_text(
+        '{"PORT":{"type":"integer","max":65535},"LEVEL":{"enum":["debug","info"]},'
+        '"API":{"type":"url"},"MISSING":{"type":"string"},"GOOD":{"enum":["info","warn"]}}'
+    )
+    result = scan(tmp_path)
+    schema = {f.name: f.message for f in result.findings if f.rule == "schema-validation"}
+    assert schema == {
+        "PORT": "value exceeds the maximum",
+        "LEVEL": "value is not one of the allowed values",
+        "API": "value does not match schema type url",
+        "MISSING": "required by schema but not defined",
+    }
+    assert "GOOD" not in schema  # valid, no finding
+    # no values leak
+    for f in result.findings:
+        assert "99999" not in f.message and "verbose" not in f.message
+
+
+def test_schema_optional_and_absent(tmp_path):
+    from envdoctor.scanner import load_schema
+
+    (tmp_path / ".env").write_text("A=1\n")
+    # no schema file → no schema findings
+    assert load_schema(tmp_path) == {}
+    assert not [f for f in scan(tmp_path).findings if f.rule == "schema-validation"]
+    # optional missing var → suppressed
+    (tmp_path / "envdoctor.schema.json").write_text('{"MAYBE":{"type":"string","optional":true}}')
+    assert not [f for f in scan(tmp_path).findings if f.rule == "schema-validation"]

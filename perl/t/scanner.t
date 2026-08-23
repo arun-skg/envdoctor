@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 57;
+use Test::More tests => 62;
 use File::Temp ();
 use File::Spec ();
 use File::Path ();
@@ -249,4 +249,21 @@ ok( !( grep { $_->{rule} eq 'type-mismatch' } @$f5 ),
     like( $out4, qr/wrote \.env\.example/,  'fix reports wrote .env.example' );
     like( $out4, qr/wrote ENVIRONMENT\.md/, 'fix reports wrote ENVIRONMENT.md' );
     is( $slurp->($ex_path), $example, 'fix rewrites exact bytes' );
+}
+
+# schema-validation
+{
+    my $d3 = File::Temp->newdir;
+    open my $e, '>', File::Spec->catfile( "$d3", '.env' ) or die $!;
+    print {$e} "PORT=99999\nLEVEL=verbose\nAPI=ftp://x\nGOOD=info\n"; close $e;
+    open my $s, '>', File::Spec->catfile( "$d3", 'envdoctor.schema.json' ) or die $!;
+    print {$s} '{"PORT":{"type":"integer","max":65535},"LEVEL":{"enum":["debug","info"]},"API":{"type":"url"},"MISSING":{"type":"string"},"GOOD":{"enum":["info","warn"]}}';
+    close $s;
+    my $findings = App::Envdoctor::Scanner::scan("$d3");
+    my %sf = map { $_->{name} => $_->{message} } grep { $_->{rule} eq 'schema-validation' } @$findings;
+    is( $sf{PORT},    'value exceeds the maximum',            'schema PORT max' );
+    is( $sf{LEVEL},   'value is not one of the allowed values','schema LEVEL enum' );
+    is( $sf{API},     'value does not match schema type url', 'schema API type' );
+    is( $sf{MISSING}, 'required by schema but not defined',   'schema MISSING required' );
+    ok( !exists $sf{GOOD}, 'schema GOOD passes' );
 }

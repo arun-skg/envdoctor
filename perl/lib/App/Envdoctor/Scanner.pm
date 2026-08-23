@@ -529,17 +529,99 @@ sub scan {
         }
     } sort grep { _is_public_secret($_) } keys %def;
 
+    my @errors_schema;
+    my $schema = _load_schema($root);
+    for my $name ( sort keys %$schema ) {
+        my $rule = $schema->{$name};
+        next unless ref $rule eq 'HASH';
+        if ( exists $def{$name} ) {
+            my $msg = _schema_failure( $rule, $def{$name}{value} );
+            push @errors_schema,
+                {
+                rule     => 'schema-validation',
+                severity => 'error',
+                name     => $name,
+                message  => $msg,
+                origin   => { file => $def{$name}{file}, line => $def{$name}{line} },
+                }
+                if defined $msg;
+        }
+        elsif ( !$rule->{optional} ) {
+            push @errors_schema,
+                {
+                rule     => 'schema-validation',
+                severity => 'error',
+                name     => $name,
+                message  => 'required by schema but not defined',
+                origin   => { file => undef, line => undef },
+                };
+        }
+    }
+
     my @findings = (
         @errors_undef,
         ( sort { $a->{name} cmp $b->{name} } @dupes ),
         @public_prefix,
         @errors_typemismatch,
+        @errors_schema,
         @warn_unused,
         @warn_envdiff,
         @warn_weak,
         @warn_typo,
     );
     return \@findings;
+}
+
+sub _load_schema {
+    my ($root) = @_;
+    require JSON::PP;
+    my $path = File::Spec->catfile( $root, 'envdoctor.schema.json' );
+    return {} unless -e $path;
+    my $data = eval { JSON::PP->new->decode( _read($path) ) };
+    return ( ref $data eq 'HASH' ) ? $data : {};
+}
+
+sub _schema_type_ok {
+    my ( $value, $declared ) = @_;
+    return 1        if $declared eq 'string';
+    return $value =~ /^-?\d+$/         ? 1 : 0 if $declared eq 'integer';
+    return $value =~ /^-?\d+(\.\d+)?$/ ? 1 : 0 if $declared eq 'float';
+    return ( lc($value) eq 'true' || lc($value) eq 'false' ) ? 1 : 0 if $declared eq 'boolean';
+    return $value =~ m{^https?://} ? 1 : 0 if $declared eq 'url';
+    if ( $declared eq 'json' ) {
+        require JSON::PP;
+        my $ok = eval { JSON::PP->new->decode($value); 1 };
+        return $ok ? 1 : 0;
+    }
+    return 1;
+}
+
+sub _schema_failure {
+    my ( $rule, $value ) = @_;
+    my $t = $rule->{type};
+    return "value does not match schema type $t"
+        if defined $t && !ref $t && !_schema_type_ok( $value, $t );
+
+    my $enum = $rule->{enum};
+    if ( ref $enum eq 'ARRAY' ) {
+        return 'value is not one of the allowed values'
+            unless grep { $_ eq $value } @$enum;
+    }
+
+    my $pat = $rule->{regex};
+    if ( defined $pat && !ref $pat ) {
+        my $re = eval {qr/$pat/};
+        return 'value does not match the required pattern' if $re && $value !~ $re;
+    }
+
+    if ( $value =~ /^-?\d+(\.\d+)?$/ ) {
+        my $num = $value + 0;
+        return 'value is below the minimum'
+            if defined $rule->{min} && !ref $rule->{min} && $num < $rule->{min};
+        return 'value exceeds the maximum'
+            if defined $rule->{max} && !ref $rule->{max} && $num > $rule->{max};
+    }
+    return undef;
 }
 
 1;

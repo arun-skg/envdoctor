@@ -355,6 +355,60 @@ def render_environment_md(defined: set[str], used: set[str]) -> str:
 # Generated docs, in output order.
 GENERATED_FILES = (".env.example", "ENVIRONMENT.md")
 
+_NUMERIC = re.compile(r"^-?\d+(\.\d+)?$")
+
+
+def load_schema(root: Path) -> dict:
+    """Load ``envdoctor.schema.json`` from the project root, or {} if absent/invalid."""
+    path = root / "envdoctor.schema.json"
+    try:
+        data = json.loads(path.read_text())
+    except (OSError, ValueError):
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
+def _type_ok(value: str, declared: str) -> bool:
+    if declared == "string":
+        return True
+    if declared == "integer":
+        return re.fullmatch(r"-?\d+", value) is not None
+    if declared == "float":
+        return re.fullmatch(r"-?\d+(\.\d+)?", value) is not None
+    if declared == "boolean":
+        return value.lower() in ("true", "false")
+    if declared == "url":
+        return re.match(r"https?://", value) is not None
+    if declared == "json":
+        try:
+            json.loads(value)
+            return True
+        except ValueError:
+            return False
+    return True
+
+
+def schema_failure(rule: dict, value: str) -> str | None:
+    """Return the first schema-check failure message for ``value``, or None."""
+    declared = rule.get("type")
+    if isinstance(declared, str) and not _type_ok(value, declared):
+        return f"value does not match schema type {declared}"
+    enum = rule.get("enum")
+    if isinstance(enum, list) and value not in enum:
+        return "value is not one of the allowed values"
+    pattern = rule.get("regex")
+    if isinstance(pattern, str) and re.search(pattern, value) is None:
+        return "value does not match the required pattern"
+    if _NUMERIC.match(value):
+        num = float(value)
+        lo = rule.get("min")
+        if isinstance(lo, (int, float)) and num < lo:
+            return "value is below the minimum"
+        hi = rule.get("max")
+        if isinstance(hi, (int, float)) and num > hi:
+            return "value exceeds the maximum"
+    return None
+
 
 def generate_docs(root: Path, extensions: Iterable[str] = ("py",)) -> dict[str, str]:
     """Return ``{filename: content}`` for the two generated files."""
@@ -475,6 +529,38 @@ def scan(root: Path, extensions: Iterable[str] = ("py",)) -> ScanResult:
                     severity="error",
                     name=name,
                     message="inferred type differs across environments",
+                    origin=d.origin,
+                )
+            )
+
+    # schema-validation: values must satisfy envdoctor.schema.json rules.
+    schema = load_schema(root)
+    for name in sorted(schema):
+        rule = schema[name]
+        if not isinstance(rule, dict):
+            continue
+        d = defined.get(name)
+        if d is None:
+            if not rule.get("optional"):
+                result.findings.append(
+                    Finding(
+                        rule="schema-validation",
+                        severity="error",
+                        name=name,
+                        message="required by schema but not defined",
+                        origin=None,
+                    )
+                )
+            continue
+        value = next(iter(d.values.values()), "")
+        msg = schema_failure(rule, value)
+        if msg:
+            result.findings.append(
+                Finding(
+                    rule="schema-validation",
+                    severity="error",
+                    name=name,
+                    message=msg,
                     origin=d.origin,
                 )
             )

@@ -76,6 +76,22 @@ are never copied.
 never written. `init` writes each file only if absent (`--force` overwrites);
 `fix` always rewrites both. Both accept `-d/--dir PATH`.
 
+## Schema validation
+
+Add an `envdoctor.schema.json` at your project root to validate `.env` values:
+
+```json
+{
+  "PORT":  { "type": "integer", "min": 1, "max": 65535 },
+  "LEVEL": { "enum": ["debug", "info", "warn", "error"] },
+  "TOKEN": { "type": "string", "optional": true }
+}
+```
+
+Supported rule fields: `type` (string/integer/float/boolean/url/json), `enum`,
+`regex`, `min`, `max`, `optional`. Values that fail are reported as
+`schema-validation` errors (values are never printed).
+
 ## Other languages
 
 envdoctor ships as a standalone native port for each ecosystem:

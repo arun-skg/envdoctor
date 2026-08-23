@@ -403,3 +403,34 @@ func TestDiffAndSync(t *testing.T) {
 		t.Fatalf("bad synced file: %q", string(data))
 	}
 }
+
+func TestSchemaValidation(t *testing.T) {
+	dir := t.TempDir()
+	must(t, filepath.Join(dir, ".env"), "PORT=99999\nLEVEL=verbose\nAPI=ftp://x\nGOOD=info\n")
+	must(t, filepath.Join(dir, "envdoctor.schema.json"),
+		`{"PORT":{"type":"integer","max":65535},"LEVEL":{"enum":["debug","info"]},"API":{"type":"url"},"MISSING":{"type":"string"},"GOOD":{"enum":["info","warn"]}}`)
+	res, _ := Scan(dir)
+	got := map[string]string{}
+	for _, f := range res.Findings {
+		if f.Rule == "schema-validation" {
+			got[f.Name] = f.Message
+		}
+	}
+	want := map[string]string{
+		"PORT":    "value exceeds the maximum",
+		"LEVEL":   "value is not one of the allowed values",
+		"API":     "value does not match schema type url",
+		"MISSING": "required by schema but not defined",
+	}
+	if len(got) != len(want) {
+		t.Fatalf("got %v", got)
+	}
+	for k, v := range want {
+		if got[k] != v {
+			t.Fatalf("%s: got %q want %q", k, got[k], v)
+		}
+	}
+	if _, ok := got["GOOD"]; ok {
+		t.Fatal("GOOD should pass")
+	}
+}

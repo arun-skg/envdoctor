@@ -539,6 +539,26 @@ final class Scanner
             }
         }
 
+        // --- errors: schema-validation ---
+        $schema = self::loadSchema($root);
+        $schemaNames = array_keys($schema);
+        sort($schemaNames);
+        foreach ($schemaNames as $name) {
+            $rule = $schema[$name];
+            if (!is_array($rule)) {
+                continue;
+            }
+            if (isset($defined[$name])) {
+                $msg = self::schemaFailure($rule, $definedValue[$name]);
+                if ($msg !== null) {
+                    $errors[] = new Finding('schema-validation', 'error', $name, $msg, $defined[$name]);
+                }
+            } elseif (empty($rule['optional'])) {
+                $errors[] = new Finding('schema-validation', 'error', $name,
+                    'required by schema but not defined', null);
+            }
+        }
+
         // --- warnings: unused ---
         foreach ($definedNames as $name) {
             if (!isset($used[$name])) {
@@ -630,6 +650,58 @@ final class Scanner
      *
      * @param Finding[] $findings
      */
+    /** @return array<string, mixed> */
+    public static function loadSchema(string $root): array
+    {
+        $path = rtrim($root, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'envdoctor.schema.json';
+        if (!is_file($path)) {
+            return [];
+        }
+        $data = json_decode((string) file_get_contents($path), true);
+
+        return is_array($data) ? $data : [];
+    }
+
+    private static function schemaTypeOk(string $value, string $declared): bool
+    {
+        switch ($declared) {
+            case 'string': return true;
+            case 'integer': return (bool) preg_match('/^-?\d+$/', $value);
+            case 'float': return (bool) preg_match('/^-?\d+(\.\d+)?$/', $value);
+            case 'boolean': return in_array(strtolower($value), ['true', 'false'], true);
+            case 'url': return (bool) preg_match('#^https?://#', $value);
+            case 'json': return json_decode($value) !== null || trim($value) === 'null';
+            default: return true;
+        }
+    }
+
+    /** @param array<string, mixed> $rule */
+    public static function schemaFailure(array $rule, string $value): ?string
+    {
+        if (isset($rule['type']) && is_string($rule['type']) && !self::schemaTypeOk($value, $rule['type'])) {
+            return "value does not match schema type {$rule['type']}";
+        }
+        if (isset($rule['enum']) && is_array($rule['enum']) && !in_array($value, $rule['enum'], true)) {
+            return 'value is not one of the allowed values';
+        }
+        if (isset($rule['regex']) && is_string($rule['regex'])) {
+            if (@preg_match('/' . str_replace('/', '\/', $rule['regex']) . '/', $value) === 0) {
+                return 'value does not match the required pattern';
+            }
+        }
+        if (preg_match('/^-?\d+(\.\d+)?$/', $value)) {
+            $num = (float) $value;
+            if (isset($rule['min']) && is_numeric($rule['min']) && $num < $rule['min']) {
+                return 'value is below the minimum';
+            }
+            if (isset($rule['max']) && is_numeric($rule['max']) && $num > $rule['max']) {
+                return 'value exceeds the maximum';
+            }
+        }
+
+        return null;
+    }
+
     public static function toJsonArray(array $findings): string
     {
         $out = [];
@@ -639,8 +711,8 @@ final class Scanner
                 'severity' => $f->severity,
                 'name' => $f->name,
                 'message' => $f->message,
-                'file' => $f->origin['file'] ?? null,
-                'line' => $f->origin['line'] ?? null,
+                'file' => $f->origin === null ? null : $f->origin['file'],
+                'line' => $f->origin === null ? null : $f->origin['line'],
             ];
         }
 
@@ -656,13 +728,13 @@ final class Scanner
 /** One reported issue. */
 final class Finding
 {
-    /** @param array{file: string, line: int} $origin */
+    /** @param array{file: string, line: int}|null $origin */
     public function __construct(
         public string $rule,
         public string $severity,
         public string $name,
         public string $message,
-        public array $origin,
+        public ?array $origin = null,
     ) {
     }
 }

@@ -61,16 +61,17 @@ final class Cli
 
             return 0;
         }
+        $loc = static fn($f) => $f->origin === null ? '' : " {$f->origin['file']}:{$f->origin['line']}";
         if ($errors) {
             echo "\nErrors\n";
             foreach ($errors as $f) {
-                echo "  x {$f->name} {$f->origin['file']}:{$f->origin['line']}  {$f->message}\n";
+                echo "  x {$f->name}{$loc($f)}  {$f->message}\n";
             }
         }
         if ($warnings) {
             echo "\nWarnings\n";
             foreach ($warnings as $f) {
-                echo "  ! {$f->name} {$f->origin['file']}:{$f->origin['line']}  {$f->message}\n";
+                echo "  ! {$f->name}{$loc($f)}  {$f->message}\n";
             }
         }
         echo "\nSummary: " . count($errors) . ' error(s), ' . count($warnings) . " warning(s)\n";

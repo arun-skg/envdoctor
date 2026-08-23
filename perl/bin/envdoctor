@@ -50,15 +50,17 @@ if ( !@$findings ) {
     print "\nNo issues found.\n";
     exit 0;
 }
+my $loc = sub {
+    my $o = shift->{origin};
+    return ( defined $o && defined $o->{file} ) ? " $o->{file}:$o->{line}" : '';
+};
 if (@errors) {
     print "\nErrors\n";
-    printf "  x %s %s:%d  %s\n", $_->{name}, $_->{origin}{file}, $_->{origin}{line}, $_->{message}
-        for @errors;
+    printf "  x %s%s  %s\n", $_->{name}, $loc->($_), $_->{message} for @errors;
 }
 if (@warnings) {
     print "\nWarnings\n";
-    printf "  ! %s %s:%d  %s\n", $_->{name}, $_->{origin}{file}, $_->{origin}{line}, $_->{message}
-        for @warnings;
+    printf "  ! %s%s  %s\n", $_->{name}, $loc->($_), $_->{message} for @warnings;
 }
 printf "\nSummary: %d error(s), %d warning(s)\n", scalar(@errors), scalar(@warnings);
 

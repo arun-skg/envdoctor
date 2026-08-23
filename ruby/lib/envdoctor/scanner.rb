@@ -354,6 +354,19 @@ module Envdoctor
                               "inferred type differs across environments", defined[name])
       end
 
+      # --- errors: schema-validation ---
+      load_schema(root).sort.each do |name, rule|
+        next unless rule.is_a?(Hash)
+
+        if defined.key?(name)
+          msg = schema_failure(rule, defined_value[name])
+          errors << Finding.new("schema-validation", "error", name, msg, defined[name]) if msg
+        elsif !rule["optional"]
+          errors << Finding.new("schema-validation", "error", name,
+                                "required by schema but not defined", nil)
+        end
+      end
+
       # --- warnings: unused ---
       defined.keys.sort.each do |name|
         next if used.key?(name)
@@ -415,6 +428,55 @@ module Envdoctor
     end
 
     # Serialize findings to the shared JSON shape. Values never appear.
+    NUMERIC_RE = /\A-?\d+(\.\d+)?\z/.freeze
+
+    def load_schema(root)
+      require "json"
+      data = JSON.parse(File.read(File.join(root, "envdoctor.schema.json")))
+      data.is_a?(Hash) ? data : {}
+    rescue StandardError
+      {}
+    end
+
+    def schema_type_ok(value, declared)
+      case declared
+      when "string" then true
+      when "integer" then value.match?(/\A-?\d+\z/)
+      when "float" then value.match?(/\A-?\d+(\.\d+)?\z/)
+      when "boolean" then %w[true false].include?(value.downcase)
+      when "url" then value.match?(%r{\Ahttps?://})
+      when "json" then (JSON.parse(value); true rescue false)
+      else true
+      end
+    end
+
+    def schema_failure(rule, value)
+      t = rule["type"]
+      return "value does not match schema type #{t}" if t.is_a?(String) && !schema_type_ok(value, t)
+
+      enum = rule["enum"]
+      return "value is not one of the allowed values" if enum.is_a?(Array) && !enum.include?(value)
+
+      pattern = rule["regex"]
+      if pattern.is_a?(String)
+        begin
+          return "value does not match the required pattern" if value !~ Regexp.new(pattern)
+        rescue RegexpError
+          # ignore invalid pattern
+        end
+      end
+
+      if value.match?(NUMERIC_RE)
+        num = value.to_f
+        lo = rule["min"]
+        return "value is below the minimum" if lo.is_a?(Numeric) && num < lo
+
+        hi = rule["max"]
+        return "value exceeds the maximum" if hi.is_a?(Numeric) && num > hi
+      end
+      nil
+    end
+
     def to_json_array(findings)
       JSON.generate(findings.map do |f|
         {
