@@ -72,8 +72,9 @@ export function parseDotenv(content: string): EnvEntry[] {
 
     // Optional `export` prefix, allowing spaces and tabs between the prefix
     // and the variable name.
-    const exportPrefix = /^export[ \t]+/.exec(content.slice(i));
-    if (exportPrefix) i += exportPrefix[0].length;
+    const exportPrefix = /export[ \t]+/y;
+    exportPrefix.lastIndex = i;
+    if (exportPrefix.test(content)) i = exportPrefix.lastIndex;
 
     const startLine = line;
 

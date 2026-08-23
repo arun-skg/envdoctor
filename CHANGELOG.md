@@ -6,7 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
-- Dotenv files now accept `export` prefixes separated from variable names by spaces or tabs.
+- The dotenv parser already accepted a space after `export`; this extends it to accept tabs and runs of spaces/tabs as the separator.
 
 ## [0.1.2] - 2026-08-16
 
