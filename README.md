@@ -27,11 +27,9 @@
 
 ### 📈 Download trends
 
-<a href="https://npm-stat.com/charts.html?package=%40arunskg%2Fenvdoctor">
-  <img src="https://raw.githubusercontent.com/arun-skg/envdoctor/npm-downloads/downloads.svg" alt="npm daily downloads, last 90 days" width="100%">
-</a>
+<img src="https://raw.githubusercontent.com/arun-skg/envdoctor/npm-downloads/downloads.svg" alt="Consolidated envdoctor downloads across ecosystems, last 90 days" width="100%">
 
-<sub>Auto-refreshed daily by the <a href="./.github/workflows/downloads-chart.yml">Downloads chart</a> workflow. Click for interactive history on npm-stat.</sub>
+<sub>Consolidated across ecosystems, auto-refreshed daily by the <a href="./.github/workflows/downloads-chart.yml">Downloads chart</a> workflow. Daily trend lines are shown for npm and PyPI (the registries that publish a time-series); RubyGems and Packagist show current totals. Maven Central and Go do not publish download statistics.</sub>
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
