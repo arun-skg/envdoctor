@@ -1,7 +1,7 @@
 {
   "name": "@arunskg/envdoctor",
   "version": "0.1.2",
-  "description": "Local-first consistency checker for environment variables. Detects missing, unused, duplicate, and mismatched variables across .env files, Docker Compose, GitHub Actions, and source code.",
+  "description": "The ESLint for environment variables — catches missing, unused, duplicate, and leaked config across .env files, source code, Docker Compose, Kubernetes, and GitHub Actions. Local-first: no network, no telemetry.",
   "type": "module",
   "license": "MIT",
   "author": "arun",
@@ -53,7 +53,18 @@
     "dotenv",
     "audit",
     "lint",
-    "ci"
+    "ci",
+    "envdoctor",
+    "environment-variables",
+    "kubernetes",
+    "docker-compose",
+    "github-actions",
+    "secrets",
+    "devops",
+    "ci-cd",
+    "nextjs",
+    "vite",
+    "static-analysis"
   ],
   "dependencies": {
     "chalk": "^6.0.0",

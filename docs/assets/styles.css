@@ -120,7 +120,20 @@ h1, h2, h3 { line-height: 1.2; letter-spacing: -0.02em; margin: 0; }
 .nav { display: flex; align-items: center; gap: 22px; }
 .nav a { color: var(--text-soft); font-size: 0.92rem; font-weight: 500; }
 .nav a:hover { color: var(--text); text-decoration: none; }
-@media (max-width: 720px) { .nav .nav-link { display: none; } }
+.nav-downloads {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--text-soft);
+}
+.nav-downloads svg { width: 14px; height: 14px; }
+@media (max-width: 720px) { .nav .nav-link { display: none; } .nav-downloads { display: none; } }
 
 /* ---------- Buttons ---------- */
 .btn {
@@ -213,6 +226,16 @@ h1, h2, h3 { line-height: 1.2; letter-spacing: -0.02em; margin: 0; }
   gap: 10px;
   max-width: 420px;
   margin: 24px auto 0;
+}
+.hero-ph {
+  display: flex;
+  justify-content: center;
+  margin-top: 28px;
+}
+.hero-ph img {
+  display: block;
+  width: 250px;
+  height: 54px;
 }
 
 /* ---------- Copy field ---------- */

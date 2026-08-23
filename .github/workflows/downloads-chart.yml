@@ -35,11 +35,13 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           tmp="$(mktemp -d)"
           mv downloads.svg "$tmp/downloads.svg"
+          mv downloads.json "$tmp/downloads.json"
           git checkout --orphan npm-downloads
           git rm -rf --quiet . || true
           mv "$tmp/downloads.svg" downloads.svg
+          mv "$tmp/downloads.json" downloads.json
           printf '# npm-downloads\n\nAuto-generated download chart. Do not edit — see `.github/workflows/downloads-chart.yml`.\n' > README.md
-          git add downloads.svg README.md
+          git add downloads.svg downloads.json README.md
           if git diff --cached --quiet; then
             echo "No changes."
             exit 0

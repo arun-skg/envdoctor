@@ -1,0 +1,57 @@
+name: False positive
+description: envdoctor flagged something that is actually fine
+labels: [false-positive]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting this — false positives are treated as high-priority bugs.
+        envdoctor never prints variable **values**, so `envdoctor scan --json` output is safe to paste here.
+  - type: dropdown
+    id: rule
+    attributes:
+      label: Which detector cried wolf?
+      options:
+        - missing
+        - undefined-in-source
+        - unused
+        - duplicates
+        - environment-diff
+        - type-mismatch
+        - schema-validation
+        - public-prefix
+        - weak-secret
+        - typo
+        - not sure
+    validations:
+      required: true
+  - type: input
+    id: variable
+    attributes:
+      label: Variable name
+      description: The name is enough — never paste the value.
+      placeholder: e.g., STRIPE_WEBHOOK_SECRET
+    validations:
+      required: true
+  - type: textarea
+    id: snippet
+    attributes:
+      label: Relevant snippet (values redacted)
+      description: The .env line, compose/k8s/workflow block, or source line that was flagged.
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why is this not a real issue?
+      description: e.g., the variable is provided at runtime by the platform, injected in CI, or intentionally unused.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: envdoctor version and ecosystem
+      placeholder: e.g., 0.1.2 (npm) / 0.1.2 (pip, arun-envdoctor)
+    validations:
+      required: true

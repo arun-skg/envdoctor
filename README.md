@@ -2,6 +2,10 @@
   <img src="docs/assets/logo.svg" width="120" alt="envdoctor logo" />
 </p>
 
+<p align="center">
+  <a href="https://www.producthunt.com/products/envdoctor?embed=true&amp;utm_source=badge-featured&amp;utm_medium=badge&amp;utm_campaign=badge-envdoctor" target="_blank" rel="noopener noreferrer"><img src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1229915&amp;theme=light&amp;t=1787493130629" alt="envdoctor - ESLint for env vars — catch config bugs before they deploy | Product Hunt" width="250" height="54" /></a>
+</p>
+
 # @arunskg/envdoctor
 
 [![npm version](https://img.shields.io/npm/v/@arunskg/envdoctor.svg)](https://www.npmjs.com/package/@arunskg/envdoctor)
@@ -19,17 +23,15 @@
 [![Maven Central](https://img.shields.io/badge/Maven%20Central-0.1.0-C71A36.svg?logo=apachemaven&logoColor=white)](https://central.sonatype.com/artifact/io.github.arun-skg/envdoctor)
 [![Go module](https://img.shields.io/badge/Go-v0.1.0-00ADD8.svg?logo=go&logoColor=white)](https://pkg.go.dev/github.com/arun-skg/envdoctor/go)
 
-**Local-first consistency checker for environment variables.** Detects missing, unused, duplicate, and mismatched variables across `.env` files, Docker Compose, Kubernetes manifests, GitHub Actions, and source code — no network calls, no telemetry, no values ever printed.
+**The ESLint for environment variables.** envdoctor audits every place your config lives — `.env` files, source code, Docker Compose, Kubernetes manifests, and GitHub Actions — and fails your build *before* a missing key, a dead variable, or a `NEXT_PUBLIC_` secret leak fails your deploy.
 
-**Available for six ecosystems** — Node, Python, Go, Ruby, PHP, and Java — as [native ports](#native-ports), each installable from its own package manager.
+```bash
+npx @arunskg/envdoctor scan     # Node — or pip / gem / composer / go install, see below
+```
+
+Runs **completely locally**: no network calls, no telemetry, variable values never printed. Available as [native ports](#native-ports) for **Node, Python, Go, Ruby, PHP, and Java** — each installable from its own package manager.
 
 📖 **Documentation: [arun-skg.github.io/envdoctor](https://arun-skg.github.io/envdoctor/)** — full guides, per-language references, and examples.
-
-### 📈 Download trends
-
-<img src="https://raw.githubusercontent.com/arun-skg/envdoctor/npm-downloads/downloads.svg" alt="Consolidated envdoctor downloads across ecosystems, last 90 days" width="100%">
-
-<sub>Consolidated across ecosystems, auto-refreshed daily by the <a href="./.github/workflows/downloads-chart.yml">Downloads chart</a> workflow. Daily trend lines are shown for npm and PyPI (the registries that publish a time-series); RubyGems and Packagist show current totals. Maven Central and Go do not publish download statistics.</sub>
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -64,10 +66,12 @@
 ## Contents
 
 - [Why](#why)
+- [Why not X?](#why-not-x)
 - [Supported formats](#supported-formats)
 - [Installation](#installation)
 - [Native ports](#native-ports)
 - [Quick start](#quick-start)
+- [Help make envdoctor smarter](#-help-make-envdoctor-smarter)
 - [Detectors](#detectors)
 - [Commands](#commands)
 - [Configuration](#configuration)
@@ -78,6 +82,7 @@
 - [Architecture](#architecture)
 - [Development](#development)
 - [Contributing](#contributing)
+- [Download trends](#download-trends)
 - [License](#license)
 
 ## Why
@@ -91,6 +96,19 @@ source code — into one normalized model, then runs a suite of detectors over i
 
 It is **local-first**: everything runs on your machine, nothing is uploaded, and
 variable *values* are never printed or written into generated artifacts.
+
+## Why not X?
+
+envdoctor checks the **consistency and hygiene of your env config, locally**. It
+deliberately does not try to be a secrets store or a git-history scanner:
+
+| Tool | What it does | How envdoctor differs |
+|------|--------------|------------------------|
+| **dotenv-linter** | Lints the *syntax* of `.env` files (one ecosystem) | envdoctor reconciles `.env` **against your code, Compose, k8s, and CI** — cross-file, not per-file — with native ports for 6 languages |
+| **gitleaks / trufflehog / git-secrets** | Find leaked secret *values* in git history | envdoctor catches the *naming/config mistake* (e.g. a secret behind `VITE_`) **before** it ships — different job, good complement |
+| **Doppler / Infisical / dotenv-vault** | Hosted secrets storage and sync | envdoctor stores nothing and never touches the network — it audits the files you already have |
+| **checkov / kics** | General IaC security scanning | envdoctor is purpose-built for the env-variable layer, including source-code usage and framework prefixes |
+| **ESLint / language linters** | Catch bad code | They stop at `process.env.X` — envdoctor checks whether `X` is defined, typed, documented, and safe to expose |
 
 ## Supported formats
 
@@ -202,6 +220,26 @@ envdoctor scan --since HEAD
 envdoctor fix --dry-run
 envdoctor fix
 ```
+
+> **Adopting on a legacy project?** Snapshot today's findings and fail CI only
+> on *new* ones:
+>
+> ```bash
+> envdoctor scan --write-baseline .envdoctor-baseline.json
+> envdoctor scan --baseline .envdoctor-baseline.json   # in CI
+> ```
+
+## 🧪 Help make envdoctor smarter
+
+envdoctor is young and its detectors are opinionated. If it **missed
+something**, **cried wolf**, or **doesn't understand your framework** (Rails?
+Django? SvelteKit? Terraform?), that's a bug *in my priorities* — tell me:
+
+- 🐺 [Report a false positive](https://github.com/arun-skg/envdoctor/issues/new?template=false_positive.yml) — 30 seconds, no values needed
+- 🔍 [Report what it missed](https://github.com/arun-skg/envdoctor/issues/new?template=missing_support.yml) — a snippet is enough
+- 🗳️ [Vote on language/framework support](https://github.com/arun-skg/envdoctor/discussions) — thumbs-up decides the roadmap
+
+Every report gets a human reply within 48 hours.
 
 ## Detectors
 
@@ -489,6 +527,17 @@ Issues and pull requests are welcome. See [CONTRIBUTING.md](./CONTRIBUTING.md)
 for the development workflow — please run `npm test`, `npm run lint`, and
 `npm run typecheck` before opening a PR. See [CHANGELOG.md](./CHANGELOG.md) for
 release history and [SECURITY.md](./SECURITY.md) to report a vulnerability.
+
+## Download trends
+
+<details>
+<summary>Consolidated downloads across ecosystems, last 90 days (auto-refreshed daily)</summary>
+
+<img src="https://raw.githubusercontent.com/arun-skg/envdoctor/npm-downloads/downloads.svg" alt="Consolidated envdoctor downloads across ecosystems, last 90 days" width="100%">
+
+<sub>Consolidated across ecosystems, auto-refreshed daily by the <a href="./.github/workflows/downloads-chart.yml">Downloads chart</a> workflow. Daily trend lines are shown for npm and PyPI (the registries that publish a time-series); RubyGems and Packagist show current totals. Maven Central and Go do not publish download statistics.</sub>
+
+</details>
 
 ## License
 

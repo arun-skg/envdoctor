@@ -72,4 +72,25 @@
       if (next) { e.preventDefault(); next.focus(); select(next.getAttribute("data-target")); }
     });
   });
+
+  // ---- Navbar download count -------------------------------------------
+  // Combined all-time total published daily by the Downloads chart workflow
+  // to the orphan `npm-downloads` branch. Fails silently — the pill stays
+  // hidden if the number can't be fetched, so the navbar never shows a broken
+  // or zero count.
+  (function () {
+    var link = document.getElementById("nav-downloads");
+    var out = document.getElementById("nav-downloads-count");
+    if (!link || !out) return;
+    var URL =
+      "https://raw.githubusercontent.com/arun-skg/envdoctor/npm-downloads/downloads.json";
+    fetch(URL, { cache: "no-store" })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) {
+        if (!d || typeof d.total !== "number" || d.total <= 0) return;
+        out.textContent = d.total.toLocaleString() + " downloads";
+        link.hidden = false;
+      })
+      .catch(function () { /* leave hidden */ });
+  })();
 })();

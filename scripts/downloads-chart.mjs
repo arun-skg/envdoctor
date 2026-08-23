@@ -14,8 +14,8 @@ const DAYS = 90;
 const OUT = process.argv[2] || "downloads.svg";
 
 const W = 820;
-const H = 300;
-const PAD = { top: 30, right: 16, bottom: 64, left: 46 };
+const H = 324;
+const PAD = { top: 30, right: 16, bottom: 88, left: 46 };
 
 const iso = (d) => d.toISOString().slice(0, 10);
 
@@ -45,6 +45,18 @@ async function npmSeries(days) {
   const m = new Map();
   if (data?.downloads) for (const d of data.downloads) m.set(d.day, d.downloads);
   return m;
+}
+
+// npm all-time total. The range endpoint caps a single request at 18 months;
+// for a young package that window covers its entire life, so this is a true
+// all-time count in practice.
+async function npmAllTime() {
+  const end = new Date();
+  const start = new Date(end.getTime() - 547 * 86400000);
+  const url = `https://api.npmjs.org/downloads/range/${iso(start)}:${iso(end)}/${NPM_PKG}`;
+  const data = await safeJson(url);
+  if (!data?.downloads) return null;
+  return data.downloads.reduce((a, d) => a + d.downloads, 0);
 }
 
 // PyPI daily downloads via pypistats overall API (without mirrors).
@@ -87,17 +99,25 @@ async function main() {
   const dates = [];
   for (let i = DAYS - 1; i >= 0; i--) dates.push(iso(new Date(end.getTime() - i * 86400000)));
 
-  const [npmMap, pypiMap, gem, pkgist] = await Promise.all([
+  const [npmMap, pypiMap, gem, pkgist, npmAll] = await Promise.all([
     npmSeries(DAYS),
     pypiSeries(),
     gemTotal(),
     packagistTotal(),
+    npmAllTime(),
   ]);
 
   const npm = seriesForDates(npmMap, dates);
   const pypi = seriesForDates(pypiMap, dates);
   const npmTotal = npm.reduce((a, b) => a + b, 0);
   const pypiTotal = pypi.reduce((a, b) => a + b, 0);
+
+  // Combined all-time total across every registry that publishes a count.
+  // RubyGems and Packagist expose true cumulative totals; npm and PyPI expose
+  // a time-series whose full window covers a young package's whole life. Maven
+  // Central and Go publish nothing, so they contribute 0.
+  const pypiAll = [...pypiMap.values()].reduce((a, b) => a + b, 0);
+  const grandTotal = (npmAll ?? 0) + pypiAll + (gem ?? 0) + (pkgist ?? 0);
   const peak = Math.max(1, ...npm, ...pypi);
   const yMax = niceMax(peak);
 
@@ -134,6 +154,11 @@ async function main() {
     `<text x="${PAD.left}" y="${totalsY}" font-size="11" fill="#888">` +
     `Totals — RubyGems: ${fmt(gem)} · Packagist: ${fmt(pkgist)} · Maven Central &amp; Go: no public download stats</text>`;
 
+  const grandY = totalsY + 20;
+  const grand =
+    `<text x="${PAD.left}" y="${grandY}" font-size="13" font-weight="700" fill="#666">` +
+    `${fmt(grandTotal)} total downloads across all ecosystems (all-time where published)</text>`;
+
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="Consolidated envdoctor downloads across ecosystems, last ${DAYS} days">
   <text x="${PAD.left}" y="18" font-size="13" font-weight="600" fill="#888">envdoctor downloads — daily trend (npm + PyPI), last ${DAYS} days</text>
   ${ticks}
@@ -142,13 +167,35 @@ async function main() {
   ${xLabels}
   ${legend}
   ${totals}
+  ${grand}
 </svg>
 `;
 
   const { writeFile } = await import("node:fs/promises");
   await writeFile(OUT, svg, "utf8");
+
+  // Machine-readable companion so other surfaces (e.g. the docs navbar) can
+  // show the combined total without re-implementing the per-registry fetches.
+  const jsonOut = OUT.replace(/\.svg$/, ".json") === OUT ? "downloads.json" : OUT.replace(/\.svg$/, ".json");
+  await writeFile(
+    jsonOut,
+    JSON.stringify(
+      {
+        total: grandTotal,
+        npm: npmAll ?? null,
+        pypi: pypiAll,
+        rubygems: gem,
+        packagist: pkgist,
+        generatedAt: new Date().toISOString(),
+      },
+      null,
+      2,
+    ),
+    "utf8",
+  );
+
   console.log(
-    `Wrote ${OUT} — npm ${npmTotal}/90d, PyPI ${pypiTotal}/90d, gem ${gem}, packagist ${pkgist}`,
+    `Wrote ${OUT} — npm ${npmTotal}/90d, PyPI ${pypiTotal}/90d, gem ${gem}, packagist ${pkgist}, all-time total ${grandTotal}`,
   );
 }
 

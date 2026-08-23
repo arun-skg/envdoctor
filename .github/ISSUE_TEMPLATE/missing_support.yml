@@ -1,0 +1,40 @@
+name: envdoctor missed something
+description: A pattern, framework, language, or misconfiguration envdoctor should have caught
+labels: [missed-detection]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This is the most valuable report you can file — it directly shapes the detector and parser roadmap.
+        A minimal snippet is enough. Never include real secret values.
+  - type: dropdown
+    id: category
+    attributes:
+      label: What did it miss?
+      options:
+        - A misconfiguration in my project (existing detector should have caught it)
+        - A framework pattern (e.g., Rails, Django, SvelteKit, Laravel, Spring)
+        - A language or runtime (new port request)
+        - A file format (e.g., Terraform, Helm, .env variants)
+        - A new detector idea (a class of env bug not covered yet)
+    validations:
+      required: true
+  - type: textarea
+    id: example
+    attributes:
+      label: Minimal example
+      description: The smallest file/snippet that shows what should have been flagged.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What should envdoctor have reported?
+      description: e.g., "STRIPE_KEY behind VITE_ should be a public-prefix error"
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: envdoctor version and ecosystem (if applicable)
+      placeholder: e.g., 0.1.2 (npm)

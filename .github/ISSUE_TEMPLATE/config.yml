@@ -1,1 +1,8 @@
 blank_issues_enabled: true
+contact_links:
+  - name: Questions & roadmap votes
+    url: https://github.com/arun-skg/envdoctor/discussions
+    about: Ask questions and vote on language/framework support in Discussions
+  - name: Documentation
+    url: https://arun-skg.github.io/envdoctor/
+    about: Full guides, per-language references, and examples
