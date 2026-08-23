@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## Unreleased
+
+### Fixed
+
+- Dotenv files now accept `export` prefixes separated from variable names by spaces or tabs.
+
 ## [0.1.2] - 2026-08-16
 
 ### Added
