@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/assets/logo.svg" width="120" alt="envdoctor logo" />
+</p>
+
 # @arunskg/envdoctor
 
 [![npm version](https://img.shields.io/npm/v/@arunskg/envdoctor.svg)](https://www.npmjs.com/package/@arunskg/envdoctor)

@@ -12,6 +12,9 @@
   <meta property="og:description" content="Local-first consistency checker for environment variables. Detects missing, unused, duplicate, type-mismatched, and leaked-secret vars across your .env files and source code. No network, no telemetry." />
   <meta property="og:url" content="https://arun-skg.github.io/envdoctor/" />
   <meta property="og:site_name" content="envdoctor" />
+  <meta property="og:image" content="https://arun-skg.github.io/envdoctor/assets/og.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:image" content="https://arun-skg.github.io/envdoctor/assets/og.png" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="envdoctor — one tool, six languages" />
   <meta name="twitter:description" content="Local-first consistency checker for environment variables. No network, no telemetry, values never printed." />
@@ -21,7 +24,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="./assets/styles.css" />
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232563eb'/%3E%3Ctext x='16' y='23' font-family='monospace' font-size='20' font-weight='700' text-anchor='middle' fill='white'%3E%24%3C/text%3E%3C/svg%3E" />
+  <link rel="icon" type="image/svg+xml" href="assets/logo.svg" />
+  <link rel="alternate icon" href="assets/favicon.png" />
 </head>
 <body>
   <a href="#main" class="visually-hidden">Skip to content</a>
@@ -29,7 +33,7 @@
   <header class="site-header">
     <div class="wrap">
       <a class="brand" href="#top">
-        <span class="logo">$</span>
+        <img class="logo" src="assets/logo.svg" width="30" height="30" alt="envdoctor logo" />
         <span>envdoctor</span>
       </a>
       <nav class="nav" aria-label="Primary">
@@ -405,7 +409,7 @@ const flag = process.env.NEW_FEATURE_FLAG;
     <div class="wrap">
       <div class="footer-grid">
         <div class="footer-brand">
-          <a class="brand" href="#top"><span class="logo">$</span><span>envdoctor</span></a>
+          <a class="brand" href="#top"><img class="logo" src="assets/logo.svg" width="30" height="30" alt="envdoctor logo" /><span>envdoctor</span></a>
           <p>A local-first consistency checker for environment variables — one tool, six native ports, no network and no telemetry.</p>
         </div>
         <div>
