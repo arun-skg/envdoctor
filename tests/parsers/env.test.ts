@@ -52,6 +52,19 @@ describe("parseDotenv", () => {
     ]);
   });
 
+  it("parses export assignments identically to plain assignments", () => {
+    const exported = parseDotenv("export \t API_URL=https://example.com\n");
+    const plain = parseDotenv("API_URL=https://example.com\n");
+
+    expect(exported).toEqual(plain);
+  });
+
+  it("does not treat variable names beginning with export as prefixes", () => {
+    expect(parseDotenv("exported=value\n")).toEqual([
+      { key: "exported", value: "value", line: 1 },
+    ]);
+  });
+
   it("keeps duplicate keys so the duplicates detector can see them", () => {
     const entries = parseDotenv("DUPLICATE=first\nDUPLICATE=second\n");
     expect(entries).toHaveLength(2);
