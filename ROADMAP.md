@@ -74,4 +74,4 @@ passes the shared conformance fixtures. See the porting guide ([#90](https://git
 Have an idea that isn't here? Open an issue — especially for another language port,
 a new detector, or a framework whose public-variable prefix we don't yet recognize.
 
-_Tracking issue: [Roadmap & help wanted](https://github.com/arun-skg/envdoctor/issues) (pinned)._
+_Tracking issue: [Roadmap & help wanted](https://github.com/arun-skg/envdoctor/issues/95) (pinned)._
