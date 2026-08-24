@@ -528,6 +528,11 @@ for the development workflow — please run `npm test`, `npm run lint`, and
 `npm run typecheck` before opening a PR. See [CHANGELOG.md](./CHANGELOG.md) for
 release history and [SECURITY.md](./SECURITY.md) to report a vulnerability.
 
+Looking for something to work on? The [ROADMAP.md](./ROADMAP.md) tracks planned
+work, and issues labelled [`help wanted`](https://github.com/arun-skg/envdoctor/labels/help%20wanted)
+and [`good first issue`](https://github.com/arun-skg/envdoctor/labels/good%20first%20issue)
+are great starting points — including native ports to new languages.
+
 ## Download trends
 
 <details>
