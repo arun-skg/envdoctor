@@ -22,6 +22,7 @@
 [![Packagist](https://img.shields.io/packagist/v/arun-skg/envdoctor.svg?label=Packagist&logo=packagist&logoColor=white)](https://packagist.org/packages/arun-skg/envdoctor)
 [![Maven Central](https://img.shields.io/maven-central/v/io.github.arun-skg/envdoctor?label=Maven%20Central&color=C71A36&logo=apachemaven&logoColor=white)](https://central.sonatype.com/artifact/io.github.arun-skg/envdoctor)
 [![Go module](https://img.shields.io/github/v/tag/arun-skg/envdoctor?filter=go/*&label=Go&color=00ADD8&logo=go&logoColor=white)](https://pkg.go.dev/github.com/arun-skg/envdoctor/go)
+[![CPAN](https://img.shields.io/cpan/v/App-Envdoctor.svg?label=CPAN&logo=perl&logoColor=white)](https://metacpan.org/dist/App-Envdoctor)
 
 **The ESLint for environment variables.** envdoctor audits every place your config lives — `.env` files, source code, Docker Compose, Kubernetes manifests, and GitHub Actions — and fails your build *before* a missing key, a dead variable, or a `NEXT_PUBLIC_` secret leak fails your deploy.
 
@@ -73,6 +74,7 @@ Runs **completely locally**: no network calls, no telemetry, variable values nev
 - [Quick start](#quick-start)
 - [Help make envdoctor smarter](#-help-make-envdoctor-smarter)
 - [Detectors](#detectors)
+- [Runtime snapshots](#runtime-snapshots)
 - [Commands](#commands)
 - [Configuration](#configuration)
 - [Environment labels](#environment-labels)
@@ -147,7 +149,7 @@ errors so it drops straight into CI.
 | **Ruby** ([`ruby/`](./ruby)) | `gem install envdoctor` | `ENV["X"]`, `ENV.fetch("X")` |
 | **PHP** ([`php/`](./php)) | `composer require --dev arun-skg/envdoctor` | `getenv`, `$_ENV`, `$_SERVER` |
 | **Java** ([`java/`](./java)) | [`io.github.arun-skg:envdoctor`](https://central.sonatype.com/artifact/io.github.arun-skg/envdoctor) | `System.getenv("X")` |
-| **Perl** ([`perl/`](./perl)) | `cpanm App::Envdoctor` *(pending CPAN release)* | `$ENV{X}` |
+| **Perl** ([`perl/`](./perl)) | `cpanm App::Envdoctor` | `$ENV{X}` |
 
 All ports share the same CLI shape:
 
@@ -258,6 +260,62 @@ Every report gets a human reply within 48 hours.
 
 Any detector can be downgraded or disabled via the [`rules`](#configuration)
 config or an [inline ignore](#inline-ignores).
+
+## Runtime snapshots
+
+The detectors above reconcile *files*. Runtime snapshots reconcile *machines* —
+the classic "builds on my laptop, fails on the server" problem. `snapshot`
+captures a sanitized picture of the **live** shell runtime and diffs two of them:
+
+- **Tool versions** — `node`, `python`, `go`, `rustc`, `java`, `ruby`, `php`,
+  `perl`, `cc`, `git` (present tools only, with the `$PATH` directory each
+  resolved from)
+- **`$PATH` order** — precedence is significant, so reordering is reported even
+  when the set of directories is identical
+- **Global packages** — opt-in via `--globals` (currently npm; slower)
+- **OS / arch / release**
+- **Environment flag names** — **names only, never values**; secret-looking
+  names (`*_TOKEN`, `*_SECRET`, `*_PASSWORD`, …) are dropped entirely
+
+A snapshot serializes to a compact, paste-able token
+(`envd1:` + base64url-gzipped JSON) that is safe to drop into an issue or chat —
+the redaction invariant means no value ever leaves your machine.
+
+```bash
+# On machine A — share a token, or write JSON
+envdoctor snapshot --token > a.token
+envdoctor snapshot -o a.snapshot.json --globals
+
+# On machine B — compare against A (token or file, either argument)
+envdoctor snapshot-diff a.snapshot.json "$(cat a.token)"
+```
+
+`snapshot-diff` exits `0` when the runtimes are equivalent and `1` on drift, so
+it drops into CI exactly like `scan`. Differing *env flag names* are reported for
+context but do not, by themselves, count as drift.
+
+```
+RUNTIME DIFF
+────────────────────────
+
+  A → B
+
+  ✓ OS  darwin/arm64 25.6.0
+
+  Tools
+  ✓ go       1.26.0
+  ⚠ node     22.11.0 → 18.0.0
+  ✓ python3  3.14.6
+
+  PATH
+  ⚠ same entries, different order
+  ❌ only in A: ~/.local/bin
+
+  ✗ runtime drift detected
+```
+
+> Runtime snapshots are currently implemented in the Node reference only; the
+> [native ports](#native-ports) focus on the file detectors.
 
 ## Commands
 
