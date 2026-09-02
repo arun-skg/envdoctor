@@ -1,0 +1,7 @@
+services:
+  worker:
+    image: node:20
+    environment:
+      REDIS_URL: redis://redis:6379
+      SENTRY_DSN: https://example.invalid/1
+    command: node app.js
