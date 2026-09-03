@@ -1,5 +1,8 @@
 [package]
-name = "envdoctor"
+# Published to crates.io as `arun-envdoctor` ("envdoctor" is taken by an
+# unrelated crate). The binary and lib are still named `envdoctor`, so the
+# command remains `envdoctor` after `cargo install arun-envdoctor`.
+name = "arun-envdoctor"
 version = "0.1.2"
 edition = "2021"
 description = "Local-first consistency checker for environment variables (native Rust port)"

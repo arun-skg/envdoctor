@@ -1,0 +1,34 @@
+# Publishes the Rust port to crates.io on a `rust-v*` tag.
+#
+# crates.io has no OIDC trusted publishing, so this uses an API token.
+# One-time setup:
+#   crates.io → Account Settings → API Tokens → create a token scoped to
+#   publish-update for the `arun-envdoctor` crate, then add it as a repo secret:
+#     Settings → Secrets and variables → Actions → New secret
+#     name: CARGO_REGISTRY_TOKEN
+# The crate must be owned by that account (the first publish claims the name).
+#
+# Release: bump `version` in rust/Cargo.toml, then push a matching tag:
+#   git tag rust-v0.1.2 && git push origin rust-v0.1.2
+name: Rust Release
+
+on:
+  push:
+    tags:
+      - "rust-v*"
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: rust
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Verify
+        run: cargo test
+      - name: Publish to crates.io
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        run: cargo publish
