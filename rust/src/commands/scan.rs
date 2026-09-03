@@ -61,7 +61,10 @@ pub async fn scan(args: ScanArgs) -> Result<u8, anyhow::Error> {
             eprintln!(
                 "warning Unknown detector \"{}\" (known: {})",
                 rule,
-                ids.iter().map(|s| s.as_str()).collect::<Vec<_>>().join(", ")
+                ids.iter()
+                    .map(|s| s.as_str())
+                    .collect::<Vec<_>>()
+                    .join(", ")
             );
         }
     }
@@ -69,10 +72,10 @@ pub async fn scan(args: ScanArgs) -> Result<u8, anyhow::Error> {
     // Determine a git-changed file filter for --staged / --since.
     let changed: Option<HashSet<Utf8PathBuf>> = if args.staged {
         Some(staged_files(&root).into_iter().collect())
-    } else if let Some(since) = &args.since {
-        Some(changed_files_since(&root, since).into_iter().collect())
     } else {
-        None
+        args.since
+            .as_ref()
+            .map(|since| changed_files_since(&root, since).into_iter().collect())
     };
     let filter_active = changed.is_some();
 
@@ -167,7 +170,10 @@ fn render_scan_json(
                 .iter()
                 .map(|o| {
                     let mut loc = serde_json::Map::new();
-                    loc.insert("file".to_string(), serde_json::json!(display_path(root, &o.file_path)));
+                    loc.insert(
+                        "file".to_string(),
+                        serde_json::json!(display_path(root, &o.file_path)),
+                    );
                     if let Some(line) = o.line {
                         loc.insert("line".to_string(), serde_json::json!(line));
                     }
@@ -240,7 +246,11 @@ fn entry_matches(a: &BaselineEntry, b: &BaselineEntry) -> bool {
     a.rule_id == b.rule_id && a.variable == b.variable && a.files == b.files
 }
 
-fn apply_baseline(findings: Vec<Finding>, root: &Utf8PathBuf, baseline_path: &Utf8PathBuf) -> Vec<Finding> {
+fn apply_baseline(
+    findings: Vec<Finding>,
+    root: &Utf8PathBuf,
+    baseline_path: &Utf8PathBuf,
+) -> Vec<Finding> {
     let full = root.join(baseline_path);
     let baseline: BaselineFile = match std::fs::read_to_string(&full)
         .ok()
@@ -272,7 +282,11 @@ fn apply_baseline(findings: Vec<Finding>, root: &Utf8PathBuf, baseline_path: &Ut
     kept
 }
 
-fn write_baseline(findings: &[Finding], root: &Utf8PathBuf, baseline_path: &Utf8PathBuf) -> Result<(), anyhow::Error> {
+fn write_baseline(
+    findings: &[Finding],
+    root: &Utf8PathBuf,
+    baseline_path: &Utf8PathBuf,
+) -> Result<(), anyhow::Error> {
     let full = root.join(baseline_path);
     let baseline = BaselineFile {
         version: 1,

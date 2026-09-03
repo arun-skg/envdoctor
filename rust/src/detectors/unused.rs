@@ -1,5 +1,5 @@
-use crate::detectors::{Definition, Detector, IndexedModel, def_sort_key, make_finding};
-use crate::models::{Finding, Severity, Origin};
+use crate::detectors::{def_sort_key, make_finding, Definition, Detector, IndexedModel};
+use crate::models::{Finding, Origin, Severity};
 use std::collections::HashSet;
 
 /// Unused: a variable defined in an environment file that is never referenced
@@ -23,18 +23,22 @@ impl Detector for UnusedDetector {
     fn detect(&self, index: &IndexedModel) -> Vec<Finding> {
         let mut findings = Vec::new();
         let mut used: HashSet<&String> = index.usages.keys().collect();
-        for name in index.compose_definitions.keys() { used.insert(name); }
-        for name in index.action_definitions.keys() { used.insert(name); }
-        for name in index.k8s_definitions.keys() { used.insert(name); }
+        for name in index.compose_definitions.keys() {
+            used.insert(name);
+        }
+        for name in index.action_definitions.keys() {
+            used.insert(name);
+        }
+        for name in index.k8s_definitions.keys() {
+            used.insert(name);
+        }
 
         // Iterate in a stable file/line order so output is deterministic and
         // matches the reference CLI (which iterates env definitions in the
         // order they were parsed).
-        let mut entries: Vec<(&String, &Vec<Definition>)> =
-            index.env_definitions.iter().collect();
-        entries.sort_by(|(na, da), (nb, db)| {
-            def_sort_key(da).cmp(&def_sort_key(db)).then(na.cmp(nb))
-        });
+        let mut entries: Vec<(&String, &Vec<Definition>)> = index.env_definitions.iter().collect();
+        entries
+            .sort_by(|(na, da), (nb, db)| def_sort_key(da).cmp(&def_sort_key(db)).then(na.cmp(nb)));
 
         let mut seen = HashSet::new();
 

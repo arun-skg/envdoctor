@@ -1,6 +1,6 @@
+use crate::models::EnvironmentVariable;
 use camino::Utf8PathBuf;
 use serde::{Deserialize, Serialize};
-use crate::models::EnvironmentVariable;
 
 /// The format of a parsed file.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]

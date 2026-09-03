@@ -27,9 +27,9 @@ pub fn encode_token(snapshot: &RuntimeSnapshot) -> anyhow::Result<String> {
 /// input.
 pub fn decode_token(token: &str) -> anyhow::Result<RuntimeSnapshot> {
     let trimmed = token.trim();
-    let body = trimmed
-        .strip_prefix(PREFIX)
-        .ok_or_else(|| anyhow::anyhow!("Not an envdoctor snapshot token (missing envd1: prefix)."))?;
+    let body = trimmed.strip_prefix(PREFIX).ok_or_else(|| {
+        anyhow::anyhow!("Not an envdoctor snapshot token (missing envd1: prefix).")
+    })?;
 
     let gzipped = base64::engine::general_purpose::URL_SAFE_NO_PAD
         .decode(body)

@@ -75,8 +75,16 @@ fn status_for(a: Option<&String>, b: Option<&String>) -> RuntimeStatus {
 }
 
 fn diff_tools(a: &RuntimeSnapshot, b: &RuntimeSnapshot) -> Vec<ToolDiff> {
-    let av: HashMap<&str, &String> = a.tools.iter().map(|t| (t.tool.as_str(), &t.version)).collect();
-    let bv: HashMap<&str, &String> = b.tools.iter().map(|t| (t.tool.as_str(), &t.version)).collect();
+    let av: HashMap<&str, &String> = a
+        .tools
+        .iter()
+        .map(|t| (t.tool.as_str(), &t.version))
+        .collect();
+    let bv: HashMap<&str, &String> = b
+        .tools
+        .iter()
+        .map(|t| (t.tool.as_str(), &t.version))
+        .collect();
     let names: BTreeSet<&str> = av.keys().chain(bv.keys()).copied().collect();
     names
         .into_iter()
@@ -91,8 +99,12 @@ fn diff_tools(a: &RuntimeSnapshot, b: &RuntimeSnapshot) -> Vec<ToolDiff> {
 
 fn diff_globals(a: &RuntimeSnapshot, b: &RuntimeSnapshot) -> Vec<GlobalDiff> {
     let index = |list: Option<&Vec<GlobalPackage>>| -> HashMap<String, String> {
-        list.map(|l| l.iter().map(|p| (p.name.clone(), p.version.clone())).collect())
-            .unwrap_or_default()
+        list.map(|l| {
+            l.iter()
+                .map(|p| (p.name.clone(), p.version.clone()))
+                .collect()
+        })
+        .unwrap_or_default()
     };
     let ecosystems: BTreeSet<&String> = a.globals.keys().chain(b.globals.keys()).collect();
     let mut out = Vec::new();
@@ -135,9 +147,8 @@ pub fn compare_snapshots(a: &RuntimeSnapshot, b: &RuntimeSnapshot) -> RuntimeDif
     let env_flag_only_a = only_in(&a.env_flag_names, &b.env_flag_names);
     let env_flag_only_b = only_in(&b.env_flag_names, &a.env_flag_names);
 
-    let os_same = a.os.platform == b.os.platform
-        && a.os.arch == b.os.arch
-        && a.os.release == b.os.release;
+    let os_same =
+        a.os.platform == b.os.platform && a.os.arch == b.os.arch && a.os.release == b.os.release;
     let fmt_os = |s: &RuntimeSnapshot| format!("{}/{} {}", s.os.platform, s.os.arch, s.os.release);
 
     let equivalent = tools.iter().all(|t| t.status == RuntimeStatus::Same)

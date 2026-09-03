@@ -82,6 +82,7 @@ pub enum RuleSeverity {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", default)]
+#[derive(Default)]
 pub struct VariableSchema {
     #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
     pub var_type: Option<SchemaType>,
@@ -95,19 +96,6 @@ pub struct VariableSchema {
     pub min: Option<i64>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub max: Option<i64>,
-}
-
-impl Default for VariableSchema {
-    fn default() -> Self {
-        Self {
-            var_type: None,
-            optional: None,
-            enum_values: None,
-            regex: None,
-            min: None,
-            max: None,
-        }
-    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -159,12 +147,13 @@ pub async fn load_config(root_dir: &Utf8PathBuf) -> Result<EnvdoctorConfig, Conf
     }
 
     let raw: serde_json::Value = if let Some(path) = config_path {
-        let content = tokio::fs::read_to_string(&path)
-            .await
-            .map_err(|e| ConfigError::LoadError {
-                path: path.to_string(),
-                reason: e.to_string(),
-            })?;
+        let content =
+            tokio::fs::read_to_string(&path)
+                .await
+                .map_err(|e| ConfigError::LoadError {
+                    path: path.to_string(),
+                    reason: e.to_string(),
+                })?;
 
         // Try TOML first, then JSON
         if path.extension() == Some("toml") {
@@ -180,17 +169,15 @@ pub async fn load_config(root_dir: &Utf8PathBuf) -> Result<EnvdoctorConfig, Conf
         pkg_config.unwrap()
     };
 
-    let config: EnvdoctorConfig = serde_json::from_value(raw).map_err(|e| ConfigError::InvalidConfig {
-        issues: e.to_string(),
-    })?;
+    let config: EnvdoctorConfig =
+        serde_json::from_value(raw).map_err(|e| ConfigError::InvalidConfig {
+            issues: e.to_string(),
+        })?;
 
     Ok(config)
 }
 
-const CONFIG_BASENAMES: &[&str] = &[
-    "envdoctor.config.toml",
-    "envdoctor.config.json",
-];
+const CONFIG_BASENAMES: &[&str] = &["envdoctor.config.toml", "envdoctor.config.json"];
 
 async fn find_config_file(root_dir: &Utf8PathBuf) -> Option<Utf8PathBuf> {
     for basename in CONFIG_BASENAMES {
@@ -220,11 +207,10 @@ pub fn blocking_load_config(root_dir: &Utf8PathBuf) -> Result<EnvdoctorConfig, C
     }
 
     let raw: serde_json::Value = if let Some(path) = config_path {
-        let content = std::fs::read_to_string(&path)
-            .map_err(|e| ConfigError::LoadError {
-                path: path.to_string(),
-                reason: e.to_string(),
-            })?;
+        let content = std::fs::read_to_string(&path).map_err(|e| ConfigError::LoadError {
+            path: path.to_string(),
+            reason: e.to_string(),
+        })?;
 
         // Try TOML first, then JSON
         if path.extension() == Some("toml") {
@@ -240,9 +226,10 @@ pub fn blocking_load_config(root_dir: &Utf8PathBuf) -> Result<EnvdoctorConfig, C
         pkg_config.unwrap()
     };
 
-    let config: EnvdoctorConfig = serde_json::from_value(raw).map_err(|e| ConfigError::InvalidConfig {
-        issues: e.to_string(),
-    })?;
+    let config: EnvdoctorConfig =
+        serde_json::from_value(raw).map_err(|e| ConfigError::InvalidConfig {
+            issues: e.to_string(),
+        })?;
 
     Ok(config)
 }

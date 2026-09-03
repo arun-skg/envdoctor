@@ -50,12 +50,14 @@ fn apply_rule_severities(findings: Vec<Finding>, config: &EnvdoctorConfig) -> Ve
             let override_sev = config.rules.get(&f.rule_id);
             match override_sev {
                 Some(crate::config::RuleSeverity::Off) => None,
-                Some(crate::config::RuleSeverity::Error) => {
-                    Some(Finding { severity: Severity::Error, ..f })
-                }
-                Some(crate::config::RuleSeverity::Warning) => {
-                    Some(Finding { severity: Severity::Warning, ..f })
-                }
+                Some(crate::config::RuleSeverity::Error) => Some(Finding {
+                    severity: Severity::Error,
+                    ..f
+                }),
+                Some(crate::config::RuleSeverity::Warning) => Some(Finding {
+                    severity: Severity::Warning,
+                    ..f
+                }),
                 None => Some(f),
             }
         })

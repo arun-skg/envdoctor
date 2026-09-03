@@ -207,7 +207,10 @@ fn capture_after(message: &str, label: &str) -> Option<String> {
     let idx = lower.find(&label.to_lowercase())?;
     let rest = &message[idx + label.len()..];
     let rest = rest.trim_start();
-    let word: String = rest.chars().take_while(|c| c.is_ascii_alphabetic()).collect();
+    let word: String = rest
+        .chars()
+        .take_while(|c| c.is_ascii_alphabetic())
+        .collect();
     if word.is_empty() {
         None
     } else {

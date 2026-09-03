@@ -1,4 +1,4 @@
-use crate::detectors::{Definition, Detector, IndexedModel, def_sort_key, make_finding};
+use crate::detectors::{def_sort_key, make_finding, Definition, Detector, IndexedModel};
 use crate::models::{Finding, Severity, VariableType};
 use std::collections::HashMap;
 
@@ -26,18 +26,24 @@ impl Detector for TypeMismatchDetector {
         let mut findings = Vec::new();
 
         let mut entries: Vec<(&String, &Vec<Definition>)> = index.env_definitions.iter().collect();
-        entries.sort_by(|(na, da), (nb, db)| def_sort_key(da).cmp(&def_sort_key(db)).then(na.cmp(nb)));
+        entries
+            .sort_by(|(na, da), (nb, db)| def_sort_key(da).cmp(&def_sort_key(db)).then(na.cmp(nb)));
 
         for (name, defs) in entries {
             let typed: Vec<&crate::detectors::Definition> = defs
                 .iter()
-                .filter(|d| d.value.is_some() && d.var_type != VariableType::Unknown && !d.value.as_ref().unwrap().is_empty())
+                .filter(|d| {
+                    d.value.is_some()
+                        && d.var_type != VariableType::Unknown
+                        && !d.value.as_ref().unwrap().is_empty()
+                })
                 .collect();
             if typed.len() < 2 {
                 continue;
             }
 
-            let distinct_types: std::collections::HashSet<_> = typed.iter().map(|d| d.var_type).collect();
+            let distinct_types: std::collections::HashSet<_> =
+                typed.iter().map(|d| d.var_type).collect();
             if distinct_types.len() < 2 {
                 continue;
             }

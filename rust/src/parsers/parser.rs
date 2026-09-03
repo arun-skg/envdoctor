@@ -17,6 +17,12 @@ pub trait Parser: Send + Sync {
 pub type ParserRegistry = Vec<Box<dyn Parser>>;
 
 /// Match a path against a registry; returns the first parser that claims it.
-pub fn parser_for_path<'a>(registry: &'a ParserRegistry, _file_path: &camino::Utf8Path) -> Option<&'a dyn Parser> {
-    registry.iter().find(|p| p.match_path(_file_path)).map(|b| b.as_ref())
+pub fn parser_for_path<'a>(
+    registry: &'a ParserRegistry,
+    _file_path: &camino::Utf8Path,
+) -> Option<&'a dyn Parser> {
+    registry
+        .iter()
+        .find(|p| p.match_path(_file_path))
+        .map(|b| b.as_ref())
 }

@@ -61,10 +61,30 @@ pub async fn fix(args: FixArgs) -> Result<u8, anyhow::Error> {
     let has_actions_refs = !checklist.secrets.is_empty() || !checklist.vars.is_empty();
 
     let mut plans = vec![
-        plan(&root, ".env.example", generate_env_example(&model, &config), &args),
-        plan(&root, "ENVIRONMENT.md", generate_environment_doc(&model, &config), &args),
-        plan(&root, "env.d.ts", generate_env_types(&model, &config), &args),
-        plan(&root, "envdoctor.schema.ts", generate_variable_schema_ts(&model), &args),
+        plan(
+            &root,
+            ".env.example",
+            generate_env_example(&model, &config),
+            &args,
+        ),
+        plan(
+            &root,
+            "ENVIRONMENT.md",
+            generate_environment_doc(&model, &config),
+            &args,
+        ),
+        plan(
+            &root,
+            "env.d.ts",
+            generate_env_types(&model, &config),
+            &args,
+        ),
+        plan(
+            &root,
+            "envdoctor.schema.ts",
+            generate_variable_schema_ts(&model),
+            &args,
+        ),
     ];
     if has_actions_refs {
         plans.push(plan(

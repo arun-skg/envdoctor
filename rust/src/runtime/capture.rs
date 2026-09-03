@@ -6,8 +6,8 @@
 //! variables. Secret-looking names are dropped, never masked, and values are
 //! never captured.
 
-use crate::models::runtime_snapshot::{GlobalPackage, OsInfo, ToolInfo};
 use crate::models::runtime_snapshot::SNAPSHOT_SCHEMA;
+use crate::models::runtime_snapshot::{GlobalPackage, OsInfo, ToolInfo};
 use crate::models::{EnvironmentVariable, RuntimeSnapshot};
 use std::collections::HashSet;
 use std::time::{SystemTime, UNIX_EPOCH};

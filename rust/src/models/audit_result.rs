@@ -1,5 +1,5 @@
-use serde::{Deserialize, Serialize};
 use crate::models::Origin;
+use serde::{Deserialize, Serialize};
 
 /// A single problem found by a detector. `message` is written for humans and
 /// must never contain a variable value.
@@ -17,7 +17,13 @@ pub struct Finding {
 }
 
 impl Finding {
-    pub fn new(rule_id: &str, severity: Severity, variable: &str, message: String, locations: Vec<Origin>) -> Self {
+    pub fn new(
+        rule_id: &str,
+        severity: Severity,
+        variable: &str,
+        message: String,
+        locations: Vec<Origin>,
+    ) -> Self {
         Self {
             id: format!("{}.{}", rule_id, variable),
             rule_id: rule_id.to_string(),

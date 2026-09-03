@@ -1,4 +1,4 @@
-use crate::detectors::{Detector, IndexedModel, make_finding, origin_sort_key};
+use crate::detectors::{make_finding, origin_sort_key, Detector, IndexedModel};
 use crate::models::{Finding, Origin, Severity};
 
 /// Undefined-in-source: a variable referenced as `process.env.X` /
@@ -25,7 +25,11 @@ impl Detector for UndefinedSourceDetector {
         let defined: std::collections::HashSet<&String> = index.env_definitions.keys().collect();
 
         let mut entries: Vec<(&String, &Vec<Origin>)> = index.source_usages.iter().collect();
-        entries.sort_by(|(na, oa), (nb, ob)| origin_sort_key(oa).cmp(&origin_sort_key(ob)).then(na.cmp(nb)));
+        entries.sort_by(|(na, oa), (nb, ob)| {
+            origin_sort_key(oa)
+                .cmp(&origin_sort_key(ob))
+                .then(na.cmp(nb))
+        });
 
         for (name, origins) in entries {
             if defined.contains(name) {

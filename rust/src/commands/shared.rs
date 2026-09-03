@@ -1,5 +1,5 @@
+use crate::formatters::{render_audit_result_json, render_report, render_sarif};
 use crate::models::{AuditResult, AuditSummary, Finding, ProjectModel, Severity};
-use crate::formatters::{render_report, render_audit_result_json, render_sarif};
 use camino::Utf8PathBuf;
 use clap::Args;
 
@@ -73,13 +73,16 @@ pub fn output_findings_verbose(
 ) -> Result<u8, anyhow::Error> {
     // Apply strict mode
     let final_findings: Vec<Finding> = if args.strict {
-        findings.iter().map(|f| {
-            let mut f = f.clone();
-            if f.severity == Severity::Warning {
-                f.severity = Severity::Error;
-            }
-            f
-        }).collect()
+        findings
+            .iter()
+            .map(|f| {
+                let mut f = f.clone();
+                if f.severity == Severity::Warning {
+                    f.severity = Severity::Error;
+                }
+                f
+            })
+            .collect()
     } else {
         findings.to_vec()
     };

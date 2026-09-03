@@ -1,6 +1,6 @@
 use crate::config::EnvdoctorConfig;
-use camino::Utf8PathBuf;
 use crate::utils::glob::matches_glob;
+use camino::Utf8PathBuf;
 use glob::glob;
 use std::collections::HashSet;
 use walkdir::WalkDir;
@@ -99,7 +99,7 @@ impl GitFilter {
         }
 
         // Get relative path
-        let rel = path.strip_prefix(&self.root).ok().and_then(|p| Some(p.as_str()));
+        let rel = path.strip_prefix(&self.root).ok().map(|p| p.as_str());
         let Some(rel) = rel else { return false };
 
         // Skip if git ignores it (via .gitignore)
@@ -187,7 +187,7 @@ pub fn changed_files_since(root: &Utf8PathBuf, since: &str) -> Vec<Utf8PathBuf> 
     match output {
         Ok(out) if out.status.success() => String::from_utf8_lossy(&out.stdout)
             .lines()
-            .filter_map(|l| Some(root.join(l)))
+            .map(|l| root.join(l))
             .collect(),
         _ => Vec::new(),
     }
@@ -203,7 +203,7 @@ pub fn staged_files(root: &Utf8PathBuf) -> Vec<Utf8PathBuf> {
     match output {
         Ok(out) if out.status.success() => String::from_utf8_lossy(&out.stdout)
             .lines()
-            .filter_map(|l| Some(root.join(l)))
+            .map(|l| root.join(l))
             .collect(),
         _ => Vec::new(),
     }

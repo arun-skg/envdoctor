@@ -1,14 +1,8 @@
-use clap::{Parser, Subcommand};
 use camino::Utf8PathBuf;
+use clap::{Parser, Subcommand};
 use envdoctor::commands::{
-    scan::ScanArgs,
-    init::InitArgs,
-    fix::FixArgs,
-    diff::DiffArgs,
-    snapshot::SnapshotArgs,
-    snapshot_diff::SnapshotDiffArgs,
-    sync::SyncArgs,
-    generate::GenerateArgs,
+    diff::DiffArgs, fix::FixArgs, generate::GenerateArgs, init::InitArgs, scan::ScanArgs,
+    snapshot::SnapshotArgs, snapshot_diff::SnapshotDiffArgs, sync::SyncArgs,
 };
 
 #[derive(Parser, Debug)]

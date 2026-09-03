@@ -1,7 +1,9 @@
+use crate::models::{
+    EnvironmentFile, EnvironmentVariable, FileFormat, Origin, OriginFormat, OriginKind,
+};
+use crate::parsers::Parser;
 use camino::Utf8Path;
 use regex::Regex;
-use crate::models::{EnvironmentFile, EnvironmentVariable, FileFormat, Origin, OriginFormat, OriginKind};
-use crate::parsers::Parser;
 
 /// Create the source-code parser for a set of file extensions.
 ///
@@ -73,7 +75,11 @@ impl Parser for SourceParser {
 
 /// 1-based line number for a character offset in `text`.
 fn line_number_at(text: &str, offset: usize) -> usize {
-    text[..offset.min(text.len())].chars().filter(|&c| c == '\n').count() + 1
+    text[..offset.min(text.len())]
+        .chars()
+        .filter(|&c| c == '\n')
+        .count()
+        + 1
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -107,7 +113,11 @@ fn strip_comments(code: &str) -> String {
     let chars: Vec<char> = code.chars().collect();
     let len = chars.len();
     let mut i = 0;
-    let mut stack: Vec<Frame> = vec![Frame { mode: Mode::Code, tpl_depth: 0, preserve: false }];
+    let mut stack: Vec<Frame> = vec![Frame {
+        mode: Mode::Code,
+        tpl_depth: 0,
+        preserve: false,
+    }];
 
     let skip_line_comment = |i: &mut usize, out: &mut String| {
         while *i < len && chars[*i] != '\n' {
@@ -136,7 +146,11 @@ fn strip_comments(code: &str) -> String {
 
     while i < len {
         let c = chars[i];
-        let next = if i + 1 < len { Some(chars[i + 1]) } else { None };
+        let next = if i + 1 < len {
+            Some(chars[i + 1])
+        } else {
+            None
+        };
 
         // Get current mode by directly accessing stack.last()
         let mode = stack.last().unwrap().mode;
@@ -151,7 +165,11 @@ fn strip_comments(code: &str) -> String {
                     };
                     // A string that immediately follows `[` is a computed-property key
                     let preserve = c != '`' && i > 0 && chars[i - 1] == '[';
-                    stack.push(Frame { mode: string_mode, tpl_depth: 0, preserve });
+                    stack.push(Frame {
+                        mode: string_mode,
+                        tpl_depth: 0,
+                        preserve,
+                    });
                     out.push(c);
                     i += 1;
                 } else if c == '/' && next == Some('/') {
@@ -186,7 +204,11 @@ fn strip_comments(code: &str) -> String {
                 } else if c == '$' && next == Some('{') {
                     out.push_str("${");
                     i += 2;
-                    stack.push(Frame { mode: Mode::CodeTpl, tpl_depth: 1, preserve: false });
+                    stack.push(Frame {
+                        mode: Mode::CodeTpl,
+                        tpl_depth: 1,
+                        preserve: false,
+                    });
                 } else {
                     // Template-literal content (not in interpolation) is blanked
                     out.push(' ');

@@ -1,4 +1,4 @@
-use crate::detectors::{Definition, Detector, IndexedModel, def_sort_key, make_finding};
+use crate::detectors::{def_sort_key, make_finding, Definition, Detector, IndexedModel};
 use crate::models::{EnvironmentVariable, Finding, Severity};
 
 const PUBLIC_PREFIXES: &[&str] = &[
@@ -13,7 +13,10 @@ const PUBLIC_PREFIXES: &[&str] = &[
 ];
 
 fn find_public_prefix(name: &str) -> Option<&'static str> {
-    PUBLIC_PREFIXES.iter().find(|&&prefix| name.starts_with(prefix)).copied()
+    PUBLIC_PREFIXES
+        .iter()
+        .find(|&&prefix| name.starts_with(prefix))
+        .copied()
 }
 
 /// Public-prefix leak: variables whose names match the secret heuristic but
@@ -39,7 +42,8 @@ impl Detector for PublicPrefixDetector {
         let mut findings = Vec::new();
 
         let mut entries: Vec<(&String, &Vec<Definition>)> = index.env_definitions.iter().collect();
-        entries.sort_by(|(na, da), (nb, db)| def_sort_key(da).cmp(&def_sort_key(db)).then(na.cmp(nb)));
+        entries
+            .sort_by(|(na, da), (nb, db)| def_sort_key(da).cmp(&def_sort_key(db)).then(na.cmp(nb)));
 
         for (name, defs) in entries {
             let prefix = find_public_prefix(name);
@@ -49,7 +53,8 @@ impl Detector for PublicPrefixDetector {
             if !EnvironmentVariable::is_secret_name(name) {
                 continue;
             }
-            let origins: Vec<crate::models::Origin> = defs.iter().map(|d| d.origin.clone()).collect();
+            let origins: Vec<crate::models::Origin> =
+                defs.iter().map(|d| d.origin.clone()).collect();
             findings.push(make_finding(
                 "public-prefix",
                 Severity::Error,

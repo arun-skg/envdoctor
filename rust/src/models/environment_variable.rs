@@ -1,5 +1,5 @@
-use serde::{Deserialize, Serialize};
 use crate::models::{Origin, VariableType};
+use serde::{Deserialize, Serialize};
 
 /// A normalized view of one environment variable across every file in the
 /// project. A single `EnvironmentVariable` aggregates every origin (definition,
@@ -31,13 +31,20 @@ pub struct EnvironmentVariable {
 impl EnvironmentVariable {
     /// Check if a name looks like a secret based on common patterns.
     pub fn is_secret_name(name: &str) -> bool {
-        regex::Regex::new(r"(?i)(SECRET|TOKEN|PASSWORD|PASS|API[_A-Z]*KEY|PRIVATE[_-]?KEY|CREDENTIALS)")
-            .unwrap()
-            .is_match(name)
+        regex::Regex::new(
+            r"(?i)(SECRET|TOKEN|PASSWORD|PASS|API[_A-Z]*KEY|PRIVATE[_-]?KEY|CREDENTIALS)",
+        )
+        .unwrap()
+        .is_match(name)
     }
 
     /// Build a normalized variable from a name, optional value, and origins.
-    pub fn create(name: String, value: Option<String>, origins: Vec<Origin>, ignore_rules: Option<Vec<String>>) -> Self {
+    pub fn create(
+        name: String,
+        value: Option<String>,
+        origins: Vec<Origin>,
+        ignore_rules: Option<Vec<String>>,
+    ) -> Self {
         let is_secret = Self::is_secret_name(&name);
         let var_type = crate::utils::type_infer::infer_type(value.as_deref());
         Self {

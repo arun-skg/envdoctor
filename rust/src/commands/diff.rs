@@ -53,7 +53,10 @@ pub async fn diff(args: DiffArgs) -> Result<u8, anyhow::Error> {
         let joined = if list.is_empty() {
             "none".to_string()
         } else {
-            list.iter().map(|s| s.as_str()).collect::<Vec<_>>().join(", ")
+            list.iter()
+                .map(|s| s.as_str())
+                .collect::<Vec<_>>()
+                .join(", ")
         };
         eprintln!("  Available: {joined}");
         return Ok(2);

@@ -1,10 +1,13 @@
-use crate::detectors::{Definition, Detector, IndexedModel, def_sort_key, make_finding};
+use crate::config::{SchemaType, VariableSchema};
+use crate::detectors::{def_sort_key, make_finding, Definition, Detector, IndexedModel};
 use crate::models::{Finding, Severity};
-use crate::config::{VariableSchema, SchemaType};
 use regex::Regex;
 
+/// A compiled per-variable value validator.
+type Validator<'a> = Box<dyn Fn(&str) -> Result<(), String> + 'a>;
+
 /// Build a validator for a variable schema.
-fn build_validator(schema: &VariableSchema) -> Option<Box<dyn Fn(&str) -> Result<(), String> + '_>> {
+fn build_validator(schema: &VariableSchema) -> Option<Validator<'_>> {
     if let Some(enum_values) = &schema.enum_values {
         if !enum_values.is_empty() {
             let enum_values = enum_values.clone();
@@ -22,44 +25,46 @@ fn build_validator(schema: &VariableSchema) -> Option<Box<dyn Fn(&str) -> Result
         Some(SchemaType::Integer) => {
             let min = schema.min;
             let max = schema.max;
-            Some(Box::new(move |v: &str| {
-                match v.parse::<i64>() {
-                    Ok(n) => {
-                        if let Some(min) = min {
-                            if n < min { return Err(format!("must be >= {}", min)); }
+            Some(Box::new(move |v: &str| match v.parse::<i64>() {
+                Ok(n) => {
+                    if let Some(min) = min {
+                        if n < min {
+                            return Err(format!("must be >= {}", min));
                         }
-                        if let Some(max) = max {
-                            if n > max { return Err(format!("must be <= {}", max)); }
-                        }
-                        Ok(())
                     }
-                    Err(_) => Err("must be an integer".to_string()),
+                    if let Some(max) = max {
+                        if n > max {
+                            return Err(format!("must be <= {}", max));
+                        }
+                    }
+                    Ok(())
                 }
+                Err(_) => Err("must be an integer".to_string()),
             }))
         }
         Some(SchemaType::Float) => {
             let min = schema.min;
             let max = schema.max;
-            Some(Box::new(move |v: &str| {
-                match v.parse::<f64>() {
-                    Ok(n) => {
-                        if let Some(min) = min {
-                            if n < min as f64 { return Err(format!("must be >= {}", min)); }
+            Some(Box::new(move |v: &str| match v.parse::<f64>() {
+                Ok(n) => {
+                    if let Some(min) = min {
+                        if n < min as f64 {
+                            return Err(format!("must be >= {}", min));
                         }
-                        if let Some(max) = max {
-                            if n > max as f64 { return Err(format!("must be <= {}", max)); }
-                        }
-                        Ok(())
                     }
-                    Err(_) => Err("must be a float".to_string()),
+                    if let Some(max) = max {
+                        if n > max as f64 {
+                            return Err(format!("must be <= {}", max));
+                        }
+                    }
+                    Ok(())
                 }
+                Err(_) => Err("must be a float".to_string()),
             }))
         }
-        Some(SchemaType::Boolean) => Some(Box::new(|v: &str| {
-            match v.parse::<bool>() {
-                Ok(_) => Ok(()),
-                Err(_) => Err("must be a boolean".to_string()),
-            }
+        Some(SchemaType::Boolean) => Some(Box::new(|v: &str| match v.parse::<bool>() {
+            Ok(_) => Ok(()),
+            Err(_) => Err("must be a boolean".to_string()),
         })),
         Some(SchemaType::Url) => Some(Box::new(|v: &str| {
             if v.starts_with("http://") || v.starts_with("https://") {
@@ -90,7 +95,9 @@ fn build_validator(schema: &VariableSchema) -> Option<Box<dyn Fn(&str) -> Result
                 None
             }
         }
-        Some(SchemaType::String) | Some(SchemaType::Enum) | None => Some(Box::new(|_v: &str| Ok(()))),
+        Some(SchemaType::String) | Some(SchemaType::Enum) | None => {
+            Some(Box::new(|_v: &str| Ok(())))
+        }
     }
 }
 
@@ -135,7 +142,8 @@ impl Detector for SchemaValidationDetector {
         let mut findings = Vec::new();
 
         let mut entries: Vec<(&String, &Vec<Definition>)> = index.env_definitions.iter().collect();
-        entries.sort_by(|(na, da), (nb, db)| def_sort_key(da).cmp(&def_sort_key(db)).then(na.cmp(nb)));
+        entries
+            .sort_by(|(na, da), (nb, db)| def_sort_key(da).cmp(&def_sort_key(db)).then(na.cmp(nb)));
 
         for (name, defs) in entries {
             let Some(variable_schema) = schema.get(name) else {

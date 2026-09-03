@@ -1,7 +1,6 @@
-
-/// Helpers for scanning shell-style variable interpolation in YAML-based
-/// formats (docker-compose, GitHub Actions). Shared because both formats use
-/// `$VAR` / `${VAR}` and need 1-based line numbers for origins.
+//! Helpers for scanning shell-style variable interpolation in YAML-based
+//! formats (docker-compose, GitHub Actions). Shared because both formats use
+//! `$VAR` / `${VAR}` and need 1-based line numbers for origins.
 
 /// Compute the 1-based line number of a character offset in `content`.
 pub fn line_for_offset(content: &str, offset: usize) -> usize {
@@ -23,7 +22,10 @@ pub fn scan_interpolations(content: &str) -> Vec<Interpolation> {
     // Protect escaped `$$` (same length, so offsets stay valid) so the second
     // `$` is never mistaken for a real interpolation.
     let protected_content = content.replace("$$", "");
-    let re = regex::Regex::new(r"\$(?:\{([A-Za-z_][A-Za-z0-9_]*)(?:\s*[:-?+][^}]*)?\}|([A-Za-z_][A-Za-z0-9_]*))").unwrap();
+    let re = regex::Regex::new(
+        r"\$(?:\{([A-Za-z_][A-Za-z0-9_]*)(?:\s*[:-?+][^}]*)?\}|([A-Za-z_][A-Za-z0-9_]*))",
+    )
+    .unwrap();
     let mut results = Vec::new();
 
     for mat in re.find_iter(&protected_content) {

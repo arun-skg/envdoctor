@@ -1,15 +1,17 @@
-pub mod origin;
-pub mod variable_type;
-pub mod environment_variable;
-pub mod environment_file;
 pub mod audit_result;
+pub mod environment_file;
+pub mod environment_variable;
+pub mod origin;
 pub mod project_model;
 pub mod runtime_snapshot;
+pub mod variable_type;
 
-pub use origin::{Origin, OriginKind, OriginFormat};
-pub use variable_type::VariableType;
-pub use environment_variable::EnvironmentVariable;
+pub use audit_result::{
+    AuditFailureKind, AuditResult, AuditSummary, ExitContext, Finding, Severity,
+};
 pub use environment_file::{EnvironmentFile, FileFormat};
-pub use audit_result::{Finding, Severity, AuditSummary, AuditResult, ExitContext, AuditFailureKind};
-pub use project_model::{ProjectModel, ParseError};
-pub use runtime_snapshot::{RuntimeSnapshot, GlobalPackage, ToolInfo, SNAPSHOT_SCHEMA};
+pub use environment_variable::EnvironmentVariable;
+pub use origin::{Origin, OriginFormat, OriginKind};
+pub use project_model::{ParseError, ProjectModel};
+pub use runtime_snapshot::{GlobalPackage, RuntimeSnapshot, ToolInfo, SNAPSHOT_SCHEMA};
+pub use variable_type::VariableType;
