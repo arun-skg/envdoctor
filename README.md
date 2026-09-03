@@ -254,7 +254,7 @@ Every report gets a human reply within 48 hours.
 | **environment-diff** | warning | Set-membership diffs across environments (e.g. `dev` vs `prod`) |
 | **type-mismatch** | error | Incompatible inferred types across environments, or values failing their own inferred type |
 | **schema-validation** | error | A value does not match its declared `schema` rule in the config |
-| **public-prefix** | error | Secret-looking variable uses a public framework prefix (`NEXT_PUBLIC_*`, `VITE_*`, etc.) and would be exposed to client bundles |
+| **public-prefix** | error | Secret-looking variable uses a public framework prefix and would be exposed to client bundles. Covers `NEXT_PUBLIC_` (Next.js), `VITE_` (Vite), `PUBLIC_` (SvelteKit, Astro), `REACT_APP_` (Create React App), `GATSBY_` (Gatsby), `NUXT_PUBLIC_` (Nuxt), `EXPO_PUBLIC_` (Expo) and `ASTRO_PUBLIC_` |
 | **weak-secret** | warning | Secret-like variable has a placeholder or very short value |
 | **typo** | warning | A referenced name closely matches a defined name and may be a typo |
 
