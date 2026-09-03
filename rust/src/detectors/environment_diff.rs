@@ -44,7 +44,8 @@ pub fn compare_environments(
             present_in_b,
         });
     }
-    entries.sort_by(|x, y| x.name.cmp(&y.name));
+    // Match the TS reference, which orders by `localeCompare`, not byte order.
+    entries.sort_by(|x, y| crate::utils::locale::locale_compare(&x.name, &y.name));
     entries
 }
 
