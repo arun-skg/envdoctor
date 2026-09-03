@@ -10,7 +10,7 @@ license = "MIT"
 repository = "https://github.com/arun-skg/envdoctor"
 homepage = "https://arun-skg.github.io/envdoctor/"
 readme = "README.md"
-keywords = ["env", "dotenv", "cli", "linter", "environment-variables"]
+keywords = ["env", "dotenv", "cli", "linter", "static-analysis"]
 categories = ["command-line-utilities", "development-tools"]
 
 [dependencies]
