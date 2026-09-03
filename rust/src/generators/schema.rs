@@ -56,7 +56,11 @@ pub fn generate_variable_schema_ts(model: &crate::models::ProjectModel) -> Strin
     lines.push(String::new());
     lines.push("export default {".to_string());
     lines.push("  schema: {".to_string());
-    for (name, ty) in &schema {
+    // Match the TS reference: entries are ordered by `localeCompare`, not the
+    // byte order the BTreeMap iterates in.
+    let mut entries: Vec<(&String, &String)> = schema.iter().collect();
+    entries.sort_by(|a, b| crate::utils::locale::locale_compare(a.0, b.0));
+    for (name, ty) in entries {
         lines.push(format!("    {name}: {{ type: \"{ty}\" }},"));
     }
     lines.push("  },".to_string());

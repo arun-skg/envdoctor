@@ -4,7 +4,7 @@ pub mod environment_doc;
 pub mod github_actions;
 pub mod schema;
 
-pub use env_example::{generate_env_example, generate_env_example_all};
+pub use env_example::generate_env_example;
 pub use env_types::generate_env_types;
 pub use environment_doc::generate_environment_doc;
 pub use github_actions::{
