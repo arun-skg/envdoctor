@@ -3,7 +3,7 @@
 # unrelated crate). The binary and lib are still named `envdoctor`, so the
 # command remains `envdoctor` after `cargo install arun-envdoctor`.
 name = "arun-envdoctor"
-version = "0.1.2"
+version = "0.1.3"
 edition = "2021"
 description = "Local-first consistency checker for environment variables (native Rust port)"
 license = "MIT"
