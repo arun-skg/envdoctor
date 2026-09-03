@@ -22,6 +22,7 @@
 [![Packagist](https://img.shields.io/packagist/v/arun-skg/envdoctor.svg?label=Packagist&logo=packagist&logoColor=white)](https://packagist.org/packages/arun-skg/envdoctor)
 [![Maven Central](https://img.shields.io/maven-central/v/io.github.arun-skg/envdoctor?label=Maven%20Central&color=C71A36&logo=apachemaven&logoColor=white)](https://central.sonatype.com/artifact/io.github.arun-skg/envdoctor)
 [![Go module](https://img.shields.io/github/v/tag/arun-skg/envdoctor?filter=go/*&label=Go&color=00ADD8&logo=go&logoColor=white)](https://pkg.go.dev/github.com/arun-skg/envdoctor/go)
+[![crates.io](https://img.shields.io/crates/v/arun-envdoctor.svg?label=crates.io&logo=rust&logoColor=white)](https://crates.io/crates/arun-envdoctor)
 [![CPAN](https://img.shields.io/cpan/v/App-Envdoctor.svg?label=CPAN&logo=perl&logoColor=white)](https://metacpan.org/dist/App-Envdoctor)
 
 **The ESLint for environment variables.** envdoctor audits every place your config lives — `.env` files, source code, Docker Compose, Kubernetes manifests, and GitHub Actions — and fails your build *before* a missing key, a dead variable, or a `NEXT_PUBLIC_` secret leak fails your deploy.
@@ -30,7 +31,7 @@
 npx @arunskg/envdoctor scan     # Node — or pip / gem / composer / go install, see below
 ```
 
-Runs **completely locally**: no network calls, no telemetry, variable values never printed. Available as [native ports](#native-ports) for **Node, Python, Go, Ruby, PHP, and Java** — each installable from its own package manager.
+Runs **completely locally**: no network calls, no telemetry, variable values never printed. Available as [native ports](#native-ports) for **Node, Python, Go, Rust, Ruby, PHP, Perl, and Java** — each installable from its own package manager.
 
 📖 **Documentation: [arun-skg.github.io/envdoctor](https://arun-skg.github.io/envdoctor/)** — full guides, per-language references, and examples.
 
@@ -106,7 +107,7 @@ deliberately does not try to be a secrets store or a git-history scanner:
 
 | Tool | What it does | How envdoctor differs |
 |------|--------------|------------------------|
-| **dotenv-linter** | Lints the *syntax* of `.env` files (one ecosystem) | envdoctor reconciles `.env` **against your code, Compose, k8s, and CI** — cross-file, not per-file — with native ports for 6 languages |
+| **dotenv-linter** | Lints the *syntax* of `.env` files (one ecosystem) | envdoctor reconciles `.env` **against your code, Compose, k8s, and CI** — cross-file, not per-file — with native ports for 7 languages |
 | **gitleaks / trufflehog / git-secrets** | Find leaked secret *values* in git history | envdoctor catches the *naming/config mistake* (e.g. a secret behind `VITE_`) **before** it ships — different job, good complement |
 | **Doppler / Infisical / dotenv-vault** | Hosted secrets storage and sync | envdoctor stores nothing and never touches the network — it audits the files you already have |
 | **checkov / kics** | General IaC security scanning | envdoctor is purpose-built for the env-variable layer, including source-code usage and framework prefixes |
@@ -146,6 +147,7 @@ errors so it drops straight into CI.
 | **Node** (reference) | `npm install -g @arunskg/envdoctor` | `process.env.X`, `import.meta.env.X` |
 | **Python** ([`python/`](./python)) | `pip install arun-envdoctor` | `os.getenv`, `os.environ[...]`, `os.environ.get` |
 | **Go** ([`go/`](./go)) | `go install github.com/arun-skg/envdoctor/go/cmd/envdoctor@latest` | `os.Getenv`, `os.LookupEnv` |
+| **Rust** ([`rust/`](./rust)) | `cargo install arun-envdoctor` | `std::env::var`, `env!`, `option_env!` |
 | **Ruby** ([`ruby/`](./ruby)) | `gem install envdoctor` | `ENV["X"]`, `ENV.fetch("X")` |
 | **PHP** ([`php/`](./php)) | `composer require --dev arun-skg/envdoctor` | `getenv`, `$_ENV`, `$_SERVER` |
 | **Java** ([`java/`](./java)) | [`io.github.arun-skg:envdoctor`](https://central.sonatype.com/artifact/io.github.arun-skg/envdoctor) | `System.getenv("X")` |
@@ -169,7 +171,7 @@ findings (and `--json` output) in every language. The native ports are now at
 `scan` / `diff` / `sync` / `init` / `fix` subcommands, `--json` output, and
 Docker Compose / Kubernetes / GitHub Actions scanning.
 
-| Detector | Node | Python · Go · Ruby · PHP · Perl · Java |
+| Detector | Node | Python · Go · Rust · Ruby · PHP · Perl · Java |
 |---|:---:|:---:|
 | missing / undefined-in-source | ✅ | ✅ |
 | unused | ✅ | ✅ |
