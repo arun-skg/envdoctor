@@ -1,7 +1,12 @@
 # envdoctor (PHP)
 
+[![Packagist](https://img.shields.io/packagist/v/arun-skg/envdoctor.svg?label=Packagist&logo=packagist&logoColor=white)](https://packagist.org/packages/arun-skg/envdoctor)
+
 Native PHP port of [envdoctor](https://github.com/arun-skg/envdoctor) — a
 local-first environment-variable consistency checker, installable via Composer.
+
+See [Why not X?](https://github.com/arun-skg/envdoctor#why-not-x) for how envdoctor
+compares to dotenv-linter, gitleaks, and hosted secrets tools.
 
 ## Install
 
@@ -100,6 +105,14 @@ Add an `envdoctor.schema.json` at your project root to validate `.env` values:
 Supported rule fields: `type` (string/integer/float/boolean/url/json), `enum`,
 `regex`, `min`, `max`, `optional`. Values that fail are reported as
 `schema-validation` errors (values are never printed).
+
+## Help make envdoctor smarter
+
+envdoctor is young and its detectors are opinionated. If it missed something or
+cried wolf, tell me:
+
+- 🐺 [Report a false positive](https://github.com/arun-skg/envdoctor/issues/new?template=false_positive.yml)
+- 🔍 [Report what it missed](https://github.com/arun-skg/envdoctor/issues/new?template=missing_support.yml)
 
 ## Other languages
 

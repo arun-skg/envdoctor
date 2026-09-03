@@ -70,11 +70,11 @@ export function parseDotenv(content: string): EnvEntry[] {
       continue;
     }
 
-    // Optional `export` prefix.
-    if (content.startsWith("export ", i)) {
-      i += "export ".length;
-      while (i < len && content[i] === " ") i++;
-    }
+    // Optional `export` prefix, allowing spaces and tabs between the prefix
+    // and the variable name.
+    const exportPrefix = /export[ \t]+/y;
+    exportPrefix.lastIndex = i;
+    if (exportPrefix.test(content)) i = exportPrefix.lastIndex;
 
     const startLine = line;
 

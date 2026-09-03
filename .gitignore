@@ -8,6 +8,8 @@ coverage/
 !.env.example
 !tests/fixtures/**/.env
 !tests/fixtures/**/.env.*
+!examples/**/.env
+!examples/**/.env.*
 
 # Java
 java/target/
@@ -31,6 +33,16 @@ __pycache__/
 
 # Go
 go/envdoctor
+
+# Rust
+rust/target/
+
+# Generated downloads chart artifacts (published to the npm-downloads branch)
+/downloads.svg
+/downloads.json
+
+# Local AI session log (SessionEnd hook) — kept local, not published
+/MEMORY.md
 
 # Perl dist artifacts
 perl/App-Envdoctor-*

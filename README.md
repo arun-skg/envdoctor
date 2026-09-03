@@ -20,8 +20,9 @@
 [![PyPI](https://img.shields.io/pypi/v/arun-envdoctor.svg?label=PyPI&logo=pypi&logoColor=white)](https://pypi.org/project/arun-envdoctor/)
 [![Gem](https://img.shields.io/gem/v/envdoctor.svg?label=RubyGems&logo=rubygems&logoColor=white)](https://rubygems.org/gems/envdoctor)
 [![Packagist](https://img.shields.io/packagist/v/arun-skg/envdoctor.svg?label=Packagist&logo=packagist&logoColor=white)](https://packagist.org/packages/arun-skg/envdoctor)
-[![Maven Central](https://img.shields.io/badge/Maven%20Central-0.1.0-C71A36.svg?logo=apachemaven&logoColor=white)](https://central.sonatype.com/artifact/io.github.arun-skg/envdoctor)
-[![Go module](https://img.shields.io/badge/Go-v0.1.0-00ADD8.svg?logo=go&logoColor=white)](https://pkg.go.dev/github.com/arun-skg/envdoctor/go)
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.arun-skg/envdoctor?label=Maven%20Central&color=C71A36&logo=apachemaven&logoColor=white)](https://central.sonatype.com/artifact/io.github.arun-skg/envdoctor)
+[![Go module](https://img.shields.io/github/v/tag/arun-skg/envdoctor?filter=go/*&label=Go&color=00ADD8&logo=go&logoColor=white)](https://pkg.go.dev/github.com/arun-skg/envdoctor/go)
+[![CPAN](https://img.shields.io/cpan/v/App-Envdoctor.svg?label=CPAN&logo=perl&logoColor=white)](https://metacpan.org/dist/App-Envdoctor)
 
 **The ESLint for environment variables.** envdoctor audits every place your config lives — `.env` files, source code, Docker Compose, Kubernetes manifests, and GitHub Actions — and fails your build *before* a missing key, a dead variable, or a `NEXT_PUBLIC_` secret leak fails your deploy.
 
@@ -73,6 +74,7 @@ Runs **completely locally**: no network calls, no telemetry, variable values nev
 - [Quick start](#quick-start)
 - [Help make envdoctor smarter](#-help-make-envdoctor-smarter)
 - [Detectors](#detectors)
+- [Runtime snapshots](#runtime-snapshots)
 - [Commands](#commands)
 - [Configuration](#configuration)
 - [Environment labels](#environment-labels)
@@ -147,7 +149,7 @@ errors so it drops straight into CI.
 | **Ruby** ([`ruby/`](./ruby)) | `gem install envdoctor` | `ENV["X"]`, `ENV.fetch("X")` |
 | **PHP** ([`php/`](./php)) | `composer require --dev arun-skg/envdoctor` | `getenv`, `$_ENV`, `$_SERVER` |
 | **Java** ([`java/`](./java)) | [`io.github.arun-skg:envdoctor`](https://central.sonatype.com/artifact/io.github.arun-skg/envdoctor) | `System.getenv("X")` |
-| **Perl** ([`perl/`](./perl)) | `cpanm App::Envdoctor` *(pending CPAN release)* | `$ENV{X}` |
+| **Perl** ([`perl/`](./perl)) | `cpanm App::Envdoctor` | `$ENV{X}` |
 
 All ports share the same CLI shape:
 
@@ -252,12 +254,68 @@ Every report gets a human reply within 48 hours.
 | **environment-diff** | warning | Set-membership diffs across environments (e.g. `dev` vs `prod`) |
 | **type-mismatch** | error | Incompatible inferred types across environments, or values failing their own inferred type |
 | **schema-validation** | error | A value does not match its declared `schema` rule in the config |
-| **public-prefix** | error | Secret-looking variable uses a public framework prefix (`NEXT_PUBLIC_*`, `VITE_*`, etc.) and would be exposed to client bundles |
+| **public-prefix** | error | Secret-looking variable uses a public framework prefix and would be exposed to client bundles. Covers `NEXT_PUBLIC_` (Next.js), `VITE_` (Vite), `PUBLIC_` (SvelteKit, Astro), `REACT_APP_` (Create React App), `GATSBY_` (Gatsby), `NUXT_PUBLIC_` (Nuxt), `EXPO_PUBLIC_` (Expo) and `ASTRO_PUBLIC_` |
 | **weak-secret** | warning | Secret-like variable has a placeholder or very short value |
 | **typo** | warning | A referenced name closely matches a defined name and may be a typo |
 
 Any detector can be downgraded or disabled via the [`rules`](#configuration)
 config or an [inline ignore](#inline-ignores).
+
+## Runtime snapshots
+
+The detectors above reconcile *files*. Runtime snapshots reconcile *machines* —
+the classic "builds on my laptop, fails on the server" problem. `snapshot`
+captures a sanitized picture of the **live** shell runtime and diffs two of them:
+
+- **Tool versions** — `node`, `python`, `go`, `rustc`, `java`, `ruby`, `php`,
+  `perl`, `cc`, `git` (present tools only, with the `$PATH` directory each
+  resolved from)
+- **`$PATH` order** — precedence is significant, so reordering is reported even
+  when the set of directories is identical
+- **Global packages** — opt-in via `--globals` (currently npm; slower)
+- **OS / arch / release**
+- **Environment flag names** — **names only, never values**; secret-looking
+  names (`*_TOKEN`, `*_SECRET`, `*_PASSWORD`, …) are dropped entirely
+
+A snapshot serializes to a compact, paste-able token
+(`envd1:` + base64url-gzipped JSON) that is safe to drop into an issue or chat —
+the redaction invariant means no value ever leaves your machine.
+
+```bash
+# On machine A — share a token, or write JSON
+envdoctor snapshot --token > a.token
+envdoctor snapshot -o a.snapshot.json --globals
+
+# On machine B — compare against A (token or file, either argument)
+envdoctor snapshot-diff a.snapshot.json "$(cat a.token)"
+```
+
+`snapshot-diff` exits `0` when the runtimes are equivalent and `1` on drift, so
+it drops into CI exactly like `scan`. Differing *env flag names* are reported for
+context but do not, by themselves, count as drift.
+
+```
+RUNTIME DIFF
+────────────────────────
+
+  A → B
+
+  ✓ OS  darwin/arm64 25.6.0
+
+  Tools
+  ✓ go       1.26.0
+  ⚠ node     22.11.0 → 18.0.0
+  ✓ python3  3.14.6
+
+  PATH
+  ⚠ same entries, different order
+  ❌ only in A: ~/.local/bin
+
+  ✗ runtime drift detected
+```
+
+> Runtime snapshots are currently implemented in the Node reference only; the
+> [native ports](#native-ports) focus on the file detectors.
 
 ## Commands
 
@@ -528,6 +586,11 @@ for the development workflow — please run `npm test`, `npm run lint`, and
 `npm run typecheck` before opening a PR. See [CHANGELOG.md](./CHANGELOG.md) for
 release history and [SECURITY.md](./SECURITY.md) to report a vulnerability.
 
+Looking for something to work on? The [ROADMAP.md](./ROADMAP.md) tracks planned
+work, and issues labelled [`help wanted`](https://github.com/arun-skg/envdoctor/labels/help%20wanted)
+and [`good first issue`](https://github.com/arun-skg/envdoctor/labels/good%20first%20issue)
+are great starting points — including native ports to new languages.
+
 ## Download trends
 
 <details>
@@ -538,6 +601,16 @@ release history and [SECURITY.md](./SECURITY.md) to report a vulnerability.
 <sub>Consolidated across ecosystems, auto-refreshed daily by the <a href="./.github/workflows/downloads-chart.yml">Downloads chart</a> workflow. Daily trend lines are shown for npm and PyPI (the registries that publish a time-series); RubyGems and Packagist show current totals. Maven Central and Go do not publish download statistics.</sub>
 
 </details>
+
+## Support
+
+envdoctor is free and MIT-licensed. If it's saved you from a broken deploy,
+you can support ongoing development:
+
+- ❤️ [GitHub Sponsors](https://github.com/sponsors/arun-skg)
+- ☕ [Buy Me a Coffee](https://buymeacoffee.com/arunskg)
+
+Starring the repo and telling a teammate helps just as much.
 
 ## License
 

@@ -32,6 +32,7 @@ describe("parseDotenv", () => {
 
     expect(byKey.get("NODE_ENV")?.[0]?.value).toBe("production");
     expect(byKey.get("NODE_ENV")?.[0]?.line).toBe(2); // export prefix handled
+    expect(byKey.get("TABBED_EXPORT")?.[0]?.value).toBe("enabled");
     expect(byKey.get("PLAIN")?.[0]?.value).toBe("value");
     expect(byKey.get("QUOTED")?.[0]?.value).toBe("double quoted");
     expect(byKey.get("SINGLE")?.[0]?.value).toBe("single quoted");
@@ -40,6 +41,28 @@ describe("parseDotenv", () => {
     expect(byKey.get("MULTILINE")?.[0]?.value).toBe("line one\nline two");
     expect(byKey.get("UNQUOTED_NUMBER")?.[0]?.value).toBe("42");
     expect(byKey.get("EMPTY")?.[0]?.value).toBe("");
+  });
+
+  it("accepts export prefixes with whitespace variants", () => {
+    const entries = parseDotenv("export\tTABBED=one\n  export   SPACED=two\n");
+
+    expect(entries.map((entry) => [entry.key, entry.value])).toEqual([
+      ["TABBED", "one"],
+      ["SPACED", "two"],
+    ]);
+  });
+
+  it("parses export assignments identically to plain assignments", () => {
+    const exported = parseDotenv("export \t API_URL=https://example.com\n");
+    const plain = parseDotenv("API_URL=https://example.com\n");
+
+    expect(exported).toEqual(plain);
+  });
+
+  it("does not treat variable names beginning with export as prefixes", () => {
+    expect(parseDotenv("exported=value\n")).toEqual([
+      { key: "exported", value: "value", line: 1 },
+    ]);
   });
 
   it("keeps duplicate keys so the duplicates detector can see them", () => {

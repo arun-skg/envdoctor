@@ -5,6 +5,8 @@ import { runDiff } from "./commands/diff.js";
 import { runFix } from "./commands/fix.js";
 import { runInit } from "./commands/init.js";
 import { runScan } from "./commands/scan.js";
+import { runSnapshot } from "./commands/snapshot.js";
+import { runSnapshotDiff } from "./commands/snapshot-diff.js";
 import { runSync } from "./commands/sync.js";
 import { resolveRootDir } from "./commands/shared.js";
 import { ui } from "./utils/logger.js";
@@ -111,6 +113,37 @@ export async function main(argv: string[]): Promise<void> {
     .action(async (envA, envB, opts) => {
       const rootDir = resolveRootDir(opts.dir);
       process.exitCode = await runSync({ rootDir, envA: envA, envB: envB, dryRun: Boolean(opts.dryRun) });
+    });
+
+  program
+    .command("snapshot")
+    .description(
+      "Capture this machine's live runtime (tool versions, PATH order, globals) as a portable token.",
+    )
+    .option("-d, --dir <path>", "Project directory (default: current directory)")
+    .option("-o, --output <file>", "Write the full snapshot JSON to a file")
+    .option("--token", "Emit a compact base64 token to stdout")
+    .option("--json", "Emit the full snapshot as JSON to stdout")
+    .option("--globals", "Include the global package inventory (slower)")
+    .action(async (opts) => {
+      const rootDir = resolveRootDir(opts.dir);
+      process.exitCode = await runSnapshot({
+        rootDir,
+        output: opts.output,
+        token: Boolean(opts.token),
+        json: Boolean(opts.json),
+        globals: Boolean(opts.globals),
+      });
+    });
+
+  program
+    .command("snapshot-diff <a> <b>")
+    .description("Compare two runtime snapshots (file paths or pasted tokens).")
+    .option("-d, --dir <path>", "Project directory (default: current directory)")
+    .option("--json", "Emit machine-readable JSON to stdout")
+    .action(async (a, b, opts) => {
+      const rootDir = resolveRootDir(opts.dir);
+      process.exitCode = await runSnapshotDiff({ rootDir, a, b, json: Boolean(opts.json) });
     });
 
   program.exitOverride();
