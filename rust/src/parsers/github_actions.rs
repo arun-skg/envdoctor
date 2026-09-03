@@ -1,7 +1,9 @@
+use crate::models::{
+    EnvironmentFile, EnvironmentVariable, FileFormat, Origin, OriginFormat, OriginKind,
+};
+use crate::parsers::{yaml_interp::line_for_offset, Parser};
 use camino::Utf8Path;
 use yaml_rust::YamlLoader;
-use crate::models::{EnvironmentFile, EnvironmentVariable, FileFormat, Origin, OriginFormat, OriginKind};
-use crate::parsers::{Parser, yaml_interp::line_for_offset};
 
 const SECRET_REF_RE_STR: &str = r"\$\{\{\s*(secrets|vars)\.([A-Za-z_][A-Za-z0-9_-]*)\s*\}\}";
 
@@ -24,7 +26,9 @@ impl Parser for GithubActionsParser {
     }
 
     fn parse(&self, content: &str, file_path: &Utf8Path) -> EnvironmentFile {
-        let doc = YamlLoader::load_from_str(content).ok().and_then(|docs| docs.into_iter().next());
+        let doc = YamlLoader::load_from_str(content)
+            .ok()
+            .and_then(|docs| docs.into_iter().next());
         let mut variables = Vec::new();
 
         if let Some(doc) = doc {
@@ -45,7 +49,11 @@ impl Parser for GithubActionsParser {
                         kind: OriginKind::Usage,
                         environment: None,
                         format: Some(OriginFormat::GithubActions),
-                        subkind: Some(if subkind == "vars" { "vars".to_string() } else { "secrets".to_string() }),
+                        subkind: Some(if subkind == "vars" {
+                            "vars".to_string()
+                        } else {
+                            "secrets".to_string()
+                        }),
                     };
                     usages.push(EnvironmentVariable::create(name, None, vec![origin], None));
                 }
@@ -62,7 +70,12 @@ impl Parser for GithubActionsParser {
                 format: Some(OriginFormat::GithubActions),
                 subkind: None,
             };
-            usages.push(EnvironmentVariable::create(interp.name, None, vec![origin], None));
+            usages.push(EnvironmentVariable::create(
+                interp.name,
+                None,
+                vec![origin],
+                None,
+            ));
         }
 
         EnvironmentFile {
@@ -89,29 +102,33 @@ fn collect_env_blocks(
             }
         }
         yaml_rust::Yaml::Hash(obj) => {
-            if let Some(env) = obj.get(&yaml_rust::Yaml::String("env".to_string())) {
-                if let yaml_rust::Yaml::Hash(env_map) = env {
-                    for (key_yaml, value_yaml) in env_map {
-                        let key = key_yaml.as_str().unwrap_or("").to_string();
-                        if key.is_empty() {
-                            continue;
-                        }
-                        let value = if value_yaml.is_badvalue() || value_yaml.is_null() {
-                            None
-                        } else {
-                            Some(value_yaml.as_str().unwrap_or("").to_string())
-                        };
-
-                        let origin = Origin {
-                            file_path: file_path.to_path_buf(),
-                            line: line_for_name(content, &key),
-                            kind: if value.is_none() { OriginKind::Reference } else { OriginKind::Definition },
-                            environment: None,
-                            format: Some(OriginFormat::GithubActions),
-                            subkind: None,
-                        };
-                        out.push(EnvironmentVariable::create(key, value, vec![origin], None));
+            if let Some(yaml_rust::Yaml::Hash(env_map)) =
+                obj.get(&yaml_rust::Yaml::String("env".to_string()))
+            {
+                for (key_yaml, value_yaml) in env_map {
+                    let key = key_yaml.as_str().unwrap_or("").to_string();
+                    if key.is_empty() {
+                        continue;
                     }
+                    let value = if value_yaml.is_badvalue() || value_yaml.is_null() {
+                        None
+                    } else {
+                        Some(value_yaml.as_str().unwrap_or("").to_string())
+                    };
+
+                    let origin = Origin {
+                        file_path: file_path.to_path_buf(),
+                        line: line_for_name(content, &key),
+                        kind: if value.is_none() {
+                            OriginKind::Reference
+                        } else {
+                            OriginKind::Definition
+                        },
+                        environment: None,
+                        format: Some(OriginFormat::GithubActions),
+                        subkind: None,
+                    };
+                    out.push(EnvironmentVariable::create(key, value, vec![origin], None));
                 }
             }
 
@@ -128,5 +145,6 @@ fn line_for_name(content: &str, name: &str) -> Option<usize> {
     let escaped = regex::escape(name);
     let pattern = format!(r#"^\s*["']?{}["']?\s*:"#, escaped);
     let re = regex::Regex::new(&pattern).ok()?;
-    re.find(content).map(|m| line_for_offset(content, m.start()))
+    re.find(content)
+        .map(|m| line_for_offset(content, m.start()))
 }

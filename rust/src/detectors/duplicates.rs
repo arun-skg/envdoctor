@@ -1,4 +1,4 @@
-use crate::detectors::{Detector, IndexedModel, make_finding};
+use crate::detectors::{make_finding, Detector, IndexedModel};
 use crate::models::{Finding, Origin, Severity};
 use std::collections::HashMap;
 
@@ -44,7 +44,14 @@ impl Detector for DuplicatesDetector {
                 }
                 let lines: Vec<usize> = origins.iter().filter_map(|o| o.line).collect();
                 let where_str = if !lines.is_empty() {
-                    format!("on lines {}", lines.iter().map(|l| l.to_string()).collect::<Vec<_>>().join(", "))
+                    format!(
+                        "on lines {}",
+                        lines
+                            .iter()
+                            .map(|l| l.to_string())
+                            .collect::<Vec<_>>()
+                            .join(", ")
+                    )
                 } else {
                     "in this file".to_string()
                 };

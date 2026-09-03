@@ -1,4 +1,6 @@
-use crate::detectors::{Definition, Detector, IndexedModel, def_sort_key, make_finding, origin_sort_key};
+use crate::detectors::{
+    def_sort_key, make_finding, origin_sort_key, Definition, Detector, IndexedModel,
+};
 use crate::models::{Finding, Origin, Severity};
 use std::collections::HashSet;
 
@@ -61,8 +63,11 @@ impl Detector for MissingDetector {
         // variable to exist. GitHub Actions `secrets.X`/`vars.X` references are
         // intentionally NOT checked here — those live in repo settings, not .env.
         let mut usage_entries: Vec<(&String, &Vec<Origin>)> = index.usages.iter().collect();
-        usage_entries
-            .sort_by(|(na, oa), (nb, ob)| origin_sort_key(oa).cmp(&origin_sort_key(ob)).then(na.cmp(nb)));
+        usage_entries.sort_by(|(na, oa), (nb, ob)| {
+            origin_sort_key(oa)
+                .cmp(&origin_sort_key(ob))
+                .then(na.cmp(nb))
+        });
         for (name, origins) in usage_entries {
             let compose_origins: Vec<Origin> = origins
                 .iter()

@@ -1,24 +1,26 @@
-use std::fs;
-use tempfile::TempDir;
-use envdoctor::commands::{scan, init, generate};
-use envdoctor::commands::shared::OutputFormat;
+use camino::Utf8PathBuf;
 use envdoctor::commands::generate::{GenerateArgs, GenerateCommand};
 use envdoctor::commands::scan::ScanArgs;
 use envdoctor::commands::shared::OutputArgs;
-use camino::Utf8PathBuf;
+use envdoctor::commands::shared::OutputFormat;
+use envdoctor::commands::{generate, init, scan};
+use std::fs;
+use tempfile::TempDir;
 
 fn create_test_project(dir: &TempDir) {
     // Create .env file
     fs::write(
         dir.path().join(".env"),
-        "DATABASE_URL=postgres://localhost:5432/myapp\nAPI_KEY=secret123\nDEBUG=true\nPORT=3000\n"
-    ).unwrap();
+        "DATABASE_URL=postgres://localhost:5432/myapp\nAPI_KEY=secret123\nDEBUG=true\nPORT=3000\n",
+    )
+    .unwrap();
 
     // Create .env.example
     fs::write(
         dir.path().join(".env.example"),
-        "DATABASE_URL=\nAPI_KEY=\nDEBUG=false\nPORT=\n"
-    ).unwrap();
+        "DATABASE_URL=\nAPI_KEY=\nDEBUG=false\nPORT=\n",
+    )
+    .unwrap();
 
     // Create a simple JS file using process.env
     fs::write(
@@ -381,7 +383,7 @@ async fn test_snapshot_diff_identical_and_differing() {
 
 #[test]
 fn test_glob_matching() {
-    use envdoctor::utils::glob::{matches_glob, matches_any_glob};
+    use envdoctor::utils::glob::{matches_any_glob, matches_glob};
 
     assert!(matches_glob("AWS_*", "AWS_SECRET"));
     assert!(!matches_glob("AWS_*", "GCP_SECRET"));
@@ -389,23 +391,56 @@ fn test_glob_matching() {
     assert!(matches_glob("FOO*", "FOOBAR"));
     assert!(!matches_glob("FOO*", "BAR"));
 
-    assert!(matches_any_glob(&["AWS_*".to_string(), "GCP_*".to_string()], "AWS_KEY"));
-    assert!(matches_any_glob(&["AWS_*".to_string(), "GCP_*".to_string()], "GCP_KEY"));
-    assert!(!matches_any_glob(&["AWS_*".to_string(), "GCP_*".to_string()], "AZURE_KEY"));
+    assert!(matches_any_glob(
+        &["AWS_*".to_string(), "GCP_*".to_string()],
+        "AWS_KEY"
+    ));
+    assert!(matches_any_glob(
+        &["AWS_*".to_string(), "GCP_*".to_string()],
+        "GCP_KEY"
+    ));
+    assert!(!matches_any_glob(
+        &["AWS_*".to_string(), "GCP_*".to_string()],
+        "AZURE_KEY"
+    ));
 }
 
 #[test]
 fn test_variable_type_inference() {
     use envdoctor::utils::type_infer::infer_type;
 
-    assert_eq!(infer_type(Some("42")), envdoctor::models::VariableType::Integer);
-    assert_eq!(infer_type(Some("3.14")), envdoctor::models::VariableType::Float);
-    assert_eq!(infer_type(Some("true")), envdoctor::models::VariableType::Boolean);
-    assert_eq!(infer_type(Some("false")), envdoctor::models::VariableType::Boolean);
-    assert_eq!(infer_type(Some("https://example.com")), envdoctor::models::VariableType::Url);
-    assert_eq!(infer_type(Some("http://localhost:3000")), envdoctor::models::VariableType::Url);
-    assert_eq!(infer_type(Some(r#"{"key": "value"}"#)), envdoctor::models::VariableType::Json);
-    assert_eq!(infer_type(Some("hello")), envdoctor::models::VariableType::String);
+    assert_eq!(
+        infer_type(Some("42")),
+        envdoctor::models::VariableType::Integer
+    );
+    assert_eq!(
+        infer_type(Some("3.14")),
+        envdoctor::models::VariableType::Float
+    );
+    assert_eq!(
+        infer_type(Some("true")),
+        envdoctor::models::VariableType::Boolean
+    );
+    assert_eq!(
+        infer_type(Some("false")),
+        envdoctor::models::VariableType::Boolean
+    );
+    assert_eq!(
+        infer_type(Some("https://example.com")),
+        envdoctor::models::VariableType::Url
+    );
+    assert_eq!(
+        infer_type(Some("http://localhost:3000")),
+        envdoctor::models::VariableType::Url
+    );
+    assert_eq!(
+        infer_type(Some(r#"{"key": "value"}"#)),
+        envdoctor::models::VariableType::Json
+    );
+    assert_eq!(
+        infer_type(Some("hello")),
+        envdoctor::models::VariableType::String
+    );
     assert_eq!(infer_type(None), envdoctor::models::VariableType::Unknown);
 }
 

@@ -1,7 +1,9 @@
+use crate::models::{
+    EnvironmentFile, EnvironmentVariable, FileFormat, Origin, OriginFormat, OriginKind,
+};
+use crate::parsers::Parser;
 use camino::Utf8Path;
 use regex::Regex;
-use crate::models::{EnvironmentFile, EnvironmentVariable, FileFormat, Origin, OriginFormat, OriginKind};
-use crate::parsers::Parser;
 
 /// Parser for dotenv-style files (`.env`, `.env.local`, `.env.production`, ...).
 ///
@@ -63,7 +65,9 @@ pub fn environment_label_for_dotenv(file_path: &Utf8Path) -> String {
     if base == ".env.example" {
         return "example".to_string();
     }
-    let suffix = base.strip_prefix(".env.").unwrap_or(base.strip_prefix(".env").unwrap_or(""));
+    let suffix = base
+        .strip_prefix(".env.")
+        .unwrap_or(base.strip_prefix(".env").unwrap_or(""));
     if suffix.is_empty() {
         return "development".to_string();
     }
@@ -125,7 +129,7 @@ fn parse_dotenv(content: &str) -> Vec<EnvEntry> {
 
         // Optional `export` prefix, allowing spaces and tabs between the prefix
         // and the variable name.
-        if i + 6 <= len && &chars[i..i+6] == ['e','x','p','o','r','t'] {
+        if i + 6 <= len && chars[i..i + 6] == ['e', 'x', 'p', 'o', 'r', 't'] {
             let mut j = i + 6;
             while j < len && (chars[j] == ' ' || chars[j] == '\t') {
                 j += 1;
@@ -137,7 +141,12 @@ fn parse_dotenv(content: &str) -> Vec<EnvEntry> {
 
         // Read the key.
         let key_start = i;
-        while i < len && (chars[i].is_ascii_alphanumeric() || chars[i] == '_' || chars[i] == '.' || chars[i] == '-') {
+        while i < len
+            && (chars[i].is_ascii_alphanumeric()
+                || chars[i] == '_'
+                || chars[i] == '.'
+                || chars[i] == '-')
+        {
             i += 1;
         }
         if i == key_start {
@@ -280,7 +289,10 @@ fn parse_ignore_directives(content: &str) -> Vec<IgnoreDirective> {
 }
 
 /// Attach pending ignore directives to the first entry that appears after them.
-fn apply_ignore_directives(mut entries: Vec<EnvEntry>, directives: Vec<IgnoreDirective>) -> Vec<EnvEntry> {
+fn apply_ignore_directives(
+    mut entries: Vec<EnvEntry>,
+    directives: Vec<IgnoreDirective>,
+) -> Vec<EnvEntry> {
     let entry_by_line: std::collections::HashMap<usize, usize> = entries
         .iter()
         .enumerate()

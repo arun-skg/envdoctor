@@ -1,4 +1,7 @@
-use crate::parsers::{docker_compose::DockerComposeParser, env::EnvParser, github_actions::GithubActionsParser, k8s::K8sParser, source::SourceParser, ParserRegistry};
+use crate::parsers::{
+    docker_compose::DockerComposeParser, env::EnvParser, github_actions::GithubActionsParser,
+    k8s::K8sParser, source::SourceParser, ParserRegistry,
+};
 
 pub struct RegistryOptions {
     pub source_extensions: Vec<String>,

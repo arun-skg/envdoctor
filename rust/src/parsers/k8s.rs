@@ -1,7 +1,9 @@
+use crate::models::{
+    EnvironmentFile, EnvironmentVariable, FileFormat, Origin, OriginFormat, OriginKind,
+};
+use crate::parsers::{yaml_interp::scan_interpolations, Parser};
 use camino::Utf8Path;
 use yaml_rust::YamlLoader;
-use crate::models::{EnvironmentFile, EnvironmentVariable, FileFormat, Origin, OriginFormat, OriginKind};
-use crate::parsers::{Parser, yaml_interp::scan_interpolations};
 
 fn is_yaml(file_path: &Utf8Path) -> bool {
     let ext = file_path.extension().unwrap_or("");
@@ -10,8 +12,11 @@ fn is_yaml(file_path: &Utf8Path) -> bool {
 
 fn looks_like_k8s(doc: &yaml_rust::Yaml) -> bool {
     if let Some(obj) = doc.as_hash() {
-        obj.get(&yaml_rust::Yaml::String("apiVersion".to_string())).is_some()
-            && obj.get(&yaml_rust::Yaml::String("kind".to_string())).is_some()
+        obj.get(&yaml_rust::Yaml::String("apiVersion".to_string()))
+            .is_some()
+            && obj
+                .get(&yaml_rust::Yaml::String("kind".to_string()))
+                .is_some()
     } else {
         false
     }
@@ -64,11 +69,7 @@ impl Parser for K8sParser {
     }
 }
 
-fn origin_at(
-    file_path: &Utf8Path,
-    line: Option<usize>,
-    kind: OriginKind,
-) -> Origin {
+fn origin_at(file_path: &Utf8Path, line: Option<usize>, kind: OriginKind) -> Origin {
     Origin {
         file_path: file_path.to_path_buf(),
         line,
@@ -115,7 +116,7 @@ fn walk_resource(
 
     let containers = get_array(pod_spec, "containers")
         .into_iter()
-        .chain(get_array(pod_spec, "initContainers").into_iter())
+        .chain(get_array(pod_spec, "initContainers"))
         .flatten()
         .collect::<Vec<_>>();
 
@@ -123,7 +124,8 @@ fn walk_resource(
         let env = get_array(container, "env").unwrap_or_default();
         for raw in env {
             if let Some(entry) = raw.as_hash() {
-                let name = entry.get(&yaml_rust::Yaml::String("name".to_string()))
+                let name = entry
+                    .get(&yaml_rust::Yaml::String("name".to_string()))
                     .and_then(|n| n.as_str())
                     .unwrap_or("")
                     .to_string();
@@ -139,7 +141,10 @@ fn walk_resource(
                         vec![origin_at(file_path, None, OriginKind::Definition)],
                         None,
                     ));
-                } else if entry.get(&yaml_rust::Yaml::String("valueFrom".to_string())).is_some() {
+                } else if entry
+                    .get(&yaml_rust::Yaml::String("valueFrom".to_string()))
+                    .is_some()
+                {
                     // Referenced but value provided elsewhere (ConfigMap/Secret).
                     usages.push(EnvironmentVariable::create(
                         name,
@@ -180,5 +185,7 @@ fn get_object<'a>(obj: &'a yaml_rust::Yaml, key: &str) -> Option<&'a yaml_rust::
 }
 
 fn get_array<'a>(obj: &'a yaml_rust::Yaml, key: &str) -> Option<Vec<&'a yaml_rust::Yaml>> {
-    get_object(obj, key).and_then(|v| v.as_vec()).map(|v| v.iter().collect())
+    get_object(obj, key)
+        .and_then(|v| v.as_vec())
+        .map(|v| v.iter().collect())
 }

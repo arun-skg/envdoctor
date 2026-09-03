@@ -2,16 +2,16 @@
 //!
 //! This is the native Rust port of the TypeScript envdoctor tool.
 
-pub mod models;
+pub mod commands;
 pub mod config;
-pub mod utils;
-pub mod parsers;
-pub mod detectors;
 pub mod core;
+pub mod detectors;
 pub mod formatters;
 pub mod generators;
-pub mod commands;
+pub mod models;
+pub mod parsers;
 pub mod runtime;
+pub mod utils;
 
 /// Re-export commands for use in main.rs
 pub use commands::*;

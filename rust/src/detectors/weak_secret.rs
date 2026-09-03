@@ -1,4 +1,4 @@
-use crate::detectors::{Definition, Detector, IndexedModel, def_sort_key, make_finding};
+use crate::detectors::{def_sort_key, make_finding, Definition, Detector, IndexedModel};
 use crate::models::{Finding, Severity};
 use std::sync::LazyLock;
 
@@ -77,7 +77,8 @@ impl Detector for WeakSecretDetector {
         let mut findings = Vec::new();
 
         let mut entries: Vec<(&String, &Vec<Definition>)> = index.env_definitions.iter().collect();
-        entries.sort_by(|(na, da), (nb, db)| def_sort_key(da).cmp(&def_sort_key(db)).then(na.cmp(nb)));
+        entries
+            .sort_by(|(na, da), (nb, db)| def_sort_key(da).cmp(&def_sort_key(db)).then(na.cmp(nb)));
 
         for (name, defs) in entries {
             for def in defs {

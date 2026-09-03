@@ -1,4 +1,4 @@
-use crate::detectors::{Detector, IndexedModel, def_sort_key, make_finding, origin_sort_key};
+use crate::detectors::{def_sort_key, make_finding, origin_sort_key, Detector, IndexedModel};
 use crate::models::{Finding, Origin, Severity};
 
 fn levenshtein(a: &str, b: &str) -> usize {
@@ -12,7 +12,11 @@ fn levenshtein(a: &str, b: &str) -> usize {
 
     for i in 1..=b.len() {
         for j in 1..=a.len() {
-            let cost = if b.as_bytes()[i - 1] == a.as_bytes()[j - 1] { 0 } else { 1 };
+            let cost = if b.as_bytes()[i - 1] == a.as_bytes()[j - 1] {
+                0
+            } else {
+                1
+            };
             matrix[i][j] = (matrix[i - 1][j] + 1)
                 .min(matrix[i][j - 1] + 1)
                 .min(matrix[i - 1][j - 1] + cost);
@@ -105,11 +109,22 @@ impl Detector for TypoDetector {
                 .then(a.cmp(b))
         });
         // Names defined but never referenced anywhere, ordered by parse order.
-        let mut unused_names: Vec<&String> =
-            index.env_definitions.keys().filter(|n| !used.contains(*n)).collect();
+        let mut unused_names: Vec<&String> = index
+            .env_definitions
+            .keys()
+            .filter(|n| !used.contains(*n))
+            .collect();
         unused_names.sort_by(|a, b| {
-            let ka = index.env_definitions.get(*a).map(|d| def_sort_key(d)).unwrap_or_default();
-            let kb = index.env_definitions.get(*b).map(|d| def_sort_key(d)).unwrap_or_default();
+            let ka = index
+                .env_definitions
+                .get(*a)
+                .map(|d| def_sort_key(d))
+                .unwrap_or_default();
+            let kb = index
+                .env_definitions
+                .get(*b)
+                .map(|d| def_sort_key(d))
+                .unwrap_or_default();
             ka.cmp(&kb).then(a.cmp(b))
         });
 
@@ -121,12 +136,16 @@ impl Detector for TypoDetector {
                     continue;
                 }
                 let pair_key = {
-                    let mut v = vec![(*undefined_name).clone(), (**unused_name).clone()];
+                    let mut v = [(*undefined_name).clone(), (**unused_name).clone()];
                     v.sort();
                     v.join("\0")
                 };
                 if seen.insert(pair_key) {
-                    let origins = index.usages.get(*undefined_name).cloned().unwrap_or_default();
+                    let origins = index
+                        .usages
+                        .get(*undefined_name)
+                        .cloned()
+                        .unwrap_or_default();
                     findings.push(make_finding(
                         "typo",
                         Severity::Warning,

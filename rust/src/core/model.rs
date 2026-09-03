@@ -105,8 +105,10 @@ fn apply_ignore_variables(
     files
         .into_iter()
         .map(|mut f| {
-            f.variables.retain(|v| !matches_any_glob(&config.ignore_variables, &v.name));
-            f.usages.retain(|v| !matches_any_glob(&config.ignore_variables, &v.name));
+            f.variables
+                .retain(|v| !matches_any_glob(&config.ignore_variables, &v.name));
+            f.usages
+                .retain(|v| !matches_any_glob(&config.ignore_variables, &v.name));
             f
         })
         .collect()

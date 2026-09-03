@@ -21,7 +21,10 @@ pub fn init(args: InitArgs) -> Result<u8, anyhow::Error> {
     let config_path = root.join("envdoctor.config.toml");
 
     if config_path.exists() && !args.force {
-        eprintln!("Config already exists at {}. Use --force to overwrite.", config_path);
+        eprintln!(
+            "Config already exists at {}. Use --force to overwrite.",
+            config_path
+        );
         return Ok(1);
     }
 

@@ -96,7 +96,8 @@ pub fn generate_env_example_all(
         let v = vars[0]; // first definition
 
         // Add source comments
-        let mut formats: Vec<&str> = vars.iter()
+        let mut formats: Vec<&str> = vars
+            .iter()
             .map(|v| match v.origins.first() {
                 Some(o) => match o.format {
                     Some(crate::models::OriginFormat::Dotenv) => "dotenv",

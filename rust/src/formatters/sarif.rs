@@ -7,11 +7,19 @@ const SARIF_SCHEMA: &str =
 
 /// Detectors whose default severity is `error`; everything else defaults to
 /// `warning`. Mirrors the reference `defaultLevelForDetector`.
-const ERROR_DETECTORS: &[&str] = &["missing", "undefined-in-source", "type-mismatch", "public-prefix"];
+const ERROR_DETECTORS: &[&str] = &[
+    "missing",
+    "undefined-in-source",
+    "type-mismatch",
+    "public-prefix",
+];
 
 /// Render findings as SARIF 2.1.0 for GitHub code scanning.
 pub fn render_sarif(findings: &[Finding], root_dir: &camino::Utf8PathBuf) -> String {
-    let results: Vec<Value> = findings.iter().map(|f| finding_to_sarif(f, root_dir)).collect();
+    let results: Vec<Value> = findings
+        .iter()
+        .map(|f| finding_to_sarif(f, root_dir))
+        .collect();
 
     let sarif = json!({
         "$schema": SARIF_SCHEMA,

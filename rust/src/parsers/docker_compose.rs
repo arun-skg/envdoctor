@@ -1,7 +1,12 @@
+use crate::models::{
+    EnvironmentFile, EnvironmentVariable, FileFormat, Origin, OriginFormat, OriginKind,
+};
+use crate::parsers::{
+    yaml_interp::{line_for_offset, scan_interpolations},
+    Parser,
+};
 use camino::Utf8Path;
 use yaml_rust::YamlLoader;
-use crate::models::{EnvironmentFile, EnvironmentVariable, FileFormat, Origin, OriginFormat, OriginKind};
-use crate::parsers::{Parser, yaml_interp::{line_for_offset, scan_interpolations}};
 
 const COMPOSE_BASENAMES: &[&str] = &[
     "docker-compose.yml",
@@ -30,16 +35,22 @@ impl Parser for DockerComposeParser {
     }
 
     fn parse(&self, content: &str, file_path: &Utf8Path) -> EnvironmentFile {
-        let doc = YamlLoader::load_from_str(content).ok().and_then(|docs| docs.into_iter().next());
+        let doc = YamlLoader::load_from_str(content)
+            .ok()
+            .and_then(|docs| docs.into_iter().next());
         let mut variables = Vec::new();
 
         if let Some(doc) = doc {
             if let Some(services) = doc["services"].as_hash() {
                 for (_, service_value) in services {
                     let env_vec = if let Some(vec) = service_value["environment"].as_vec() {
-                        vec.iter().map(|v| (yaml_rust::Yaml::String("".to_string()), v.clone())).collect::<Vec<_>>()
+                        vec.iter()
+                            .map(|v| (yaml_rust::Yaml::String("".to_string()), v.clone()))
+                            .collect::<Vec<_>>()
                     } else if let Some(hash) = service_value["environment"].as_hash() {
-                        hash.iter().map(|(k,v)| (k.clone(), v.clone())).collect::<Vec<_>>()
+                        hash.iter()
+                            .map(|(k, v)| (k.clone(), v.clone()))
+                            .collect::<Vec<_>>()
                     } else {
                         continue;
                     };
@@ -61,7 +72,12 @@ impl Parser for DockerComposeParser {
                 format: Some(OriginFormat::DockerCompose),
                 subkind: None,
             };
-            usages.push(EnvironmentVariable::create(interp.name, None, vec![origin], None));
+            usages.push(EnvironmentVariable::create(
+                interp.name,
+                None,
+                vec![origin],
+                None,
+            ));
         }
 
         EnvironmentFile {
@@ -115,7 +131,11 @@ fn normalize_environment(
         let origin = Origin {
             file_path: file_path.to_path_buf(),
             line: line_for_name(content, &key),
-            kind: if value.is_none() { OriginKind::Reference } else { OriginKind::Definition },
+            kind: if value.is_none() {
+                OriginKind::Reference
+            } else {
+                OriginKind::Definition
+            },
             environment: None,
             format: Some(OriginFormat::DockerCompose),
             subkind: None,
@@ -133,5 +153,6 @@ fn line_for_name(content: &str, name: &str) -> Option<usize> {
     // `(?m)` makes `^` match at each line start, mirroring the TS `m` flag.
     let pattern = format!(r#"(?m)^\s*[- ]*["']?{}["']?\s*[:=]"#, escaped);
     let re = regex::Regex::new(&pattern).ok()?;
-    re.find(content).map(|m| line_for_offset(content, m.start()))
+    re.find(content)
+        .map(|m| line_for_offset(content, m.start()))
 }

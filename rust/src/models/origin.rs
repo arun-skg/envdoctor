@@ -61,7 +61,11 @@ pub enum OriginFormat {
 }
 
 impl Origin {
-    pub fn new_definition(file_path: Utf8PathBuf, line: Option<usize>, environment: Option<String>) -> Self {
+    pub fn new_definition(
+        file_path: Utf8PathBuf,
+        line: Option<usize>,
+        environment: Option<String>,
+    ) -> Self {
         Self {
             file_path,
             line,
@@ -72,7 +76,11 @@ impl Origin {
         }
     }
 
-    pub fn new_reference(file_path: Utf8PathBuf, line: Option<usize>, environment: Option<String>) -> Self {
+    pub fn new_reference(
+        file_path: Utf8PathBuf,
+        line: Option<usize>,
+        environment: Option<String>,
+    ) -> Self {
         Self {
             file_path,
             line,

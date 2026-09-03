@@ -32,7 +32,9 @@ pub fn generate_environment_doc(
     let mut by_format: HashMap<&str, Vec<&String>> = HashMap::new();
     for name in &names {
         let vars = &by_name[*name];
-        let format = vars[0].origins.first()
+        let format = vars[0]
+            .origins
+            .first()
             .and_then(|o| o.format.clone())
             .map(|f| match f {
                 crate::models::OriginFormat::Dotenv => "Dotenv (.env*)",
@@ -56,8 +58,12 @@ pub fn generate_environment_doc(
     ];
 
     for format in format_order {
-        let Some(var_names) = by_format.get(format) else { continue };
-        if var_names.is_empty() { continue; }
+        let Some(var_names) = by_format.get(format) else {
+            continue;
+        };
+        if var_names.is_empty() {
+            continue;
+        }
 
         out.push_str(&format!("## {}\n\n", format));
         out.push_str("| Variable | Type | Required | Secret | Description |\n");
@@ -70,7 +76,10 @@ pub fn generate_environment_doc(
             let required = if v.value.is_some() { "Yes" } else { "No" };
             let secret = if v.is_secret { "Yes" } else { "No" };
             let desc = description_for(name, v);
-            out.push_str(&format!("| {} | {} | {} | {} | {} |\n", name, var_type, required, secret, desc));
+            out.push_str(&format!(
+                "| {} | {} | {} | {} | {} |\n",
+                name, var_type, required, secret, desc
+            ));
         }
         out.push('\n');
     }

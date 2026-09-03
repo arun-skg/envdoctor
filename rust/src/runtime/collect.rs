@@ -1,6 +1,8 @@
-use crate::models::{ProjectModel, RuntimeSnapshot, EnvironmentVariable, Origin, OriginKind, OriginFormat};
-use crate::models::runtime_snapshot::{OsInfo, ToolInfo};
 use crate::config::EnvdoctorConfig;
+use crate::models::runtime_snapshot::{OsInfo, ToolInfo};
+use crate::models::{
+    EnvironmentVariable, Origin, OriginFormat, OriginKind, ProjectModel, RuntimeSnapshot,
+};
 use camino::Utf8PathBuf;
 use std::collections::HashMap;
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -77,7 +79,11 @@ pub fn collect_runtime(
     // Get env flag names (variables that look like feature flags)
     let env_flag_names: Vec<String> = variables
         .iter()
-        .filter(|v| v.name.starts_with("FEATURE_") || v.name.starts_with("ENABLE_") || v.name.starts_with("FLAG_"))
+        .filter(|v| {
+            v.name.starts_with("FEATURE_")
+                || v.name.starts_with("ENABLE_")
+                || v.name.starts_with("FLAG_")
+        })
         .map(|v| v.name.clone())
         .collect();
 
@@ -101,7 +107,10 @@ pub fn collect_runtime(
             });
         }
     }
-    if let Ok(output) = std::process::Command::new("cargo").arg("--version").output() {
+    if let Ok(output) = std::process::Command::new("cargo")
+        .arg("--version")
+        .output()
+    {
         if output.status.success() {
             tools.push(ToolInfo {
                 tool: "cargo".to_string(),

@@ -35,8 +35,6 @@ pub fn generate_env_types(
         // Generate interface
         if has_vite {
             out.push_str("interface ImportMetaEnv {\n");
-        } else if has_next {
-            out.push_str("interface ProcessEnv {\n");
         } else {
             out.push_str("interface ProcessEnv {\n");
         }
@@ -46,7 +44,10 @@ pub fn generate_env_types(
             let ts_type = variable_type_to_ts(&v.var_type, v.value.as_deref());
             let optional = if v.value.is_none() { "?" } else { "" };
             let comment = if v.is_secret { " // secret" } else { "" };
-            out.push_str(&format!("  readonly {}{}: {}{}\n", name, optional, ts_type, comment));
+            out.push_str(&format!(
+                "  readonly {}{}: {}{}\n",
+                name, optional, ts_type, comment
+            ));
         }
         out.push_str("}\n\n");
 
@@ -64,7 +65,10 @@ pub fn generate_env_types(
             let ts_type = variable_type_to_ts(&v.var_type, v.value.as_deref());
             let optional = if v.value.is_none() { "?" } else { "" };
             let comment = if v.is_secret { " // secret" } else { "" };
-            out.push_str(&format!("    {}{}: {}{}\n", name, optional, ts_type, comment));
+            out.push_str(&format!(
+                "    {}{}: {}{}\n",
+                name, optional, ts_type, comment
+            ));
         }
         out.push_str("  }\n");
         out.push_str("}\n");
@@ -90,19 +94,12 @@ fn variable_type_to_ts(var_type: &VariableType, value: Option<&str>) -> String {
 
 fn infer_ts_type(value: &str) -> String {
     let v = value.trim();
-    if v.parse::<i64>().is_ok() {
-        "number".to_string()
-    } else if v.parse::<f64>().is_ok() {
+    if v.parse::<i64>().is_ok() || v.parse::<f64>().is_ok() {
         "number".to_string()
     } else if v == "true" || v == "false" {
         "boolean".to_string()
-    } else if v.starts_with("http://") || v.starts_with("https://") {
-        "string".to_string()
-    } else if (v.starts_with('{') && v.ends_with('}'))
-        || (v.starts_with('[') && v.ends_with(']'))
-    {
-        "string".to_string()
     } else {
+        // URLs and JSON-like values are represented as `string` in env files.
         "string".to_string()
     }
 }

@@ -1,7 +1,7 @@
-use camino::Utf8PathBuf;
-use serde::{Deserialize, Serialize};
 use crate::config::EnvdoctorConfig;
 use crate::models::EnvironmentFile;
+use camino::Utf8PathBuf;
+use serde::{Deserialize, Serialize};
 
 /// The fully assembled, format-agnostic view of a project, produced by
 /// `core/model.rs` from discovered and parsed files. This is the single input
@@ -65,20 +65,18 @@ impl ProjectModel {
             for v in &file.variables {
                 if v.name == name {
                     for origin in &v.origins {
-                        let key = format!("{}:{:?}:{:?}", origin.file_path, origin.line, origin.kind);
-                        if !seen.contains_key(&key) {
-                            seen.insert(key, origin.clone());
-                        }
+                        let key =
+                            format!("{}:{:?}:{:?}", origin.file_path, origin.line, origin.kind);
+                        seen.entry(key).or_insert_with(|| origin.clone());
                     }
                 }
             }
             for v in &file.usages {
                 if v.name == name {
                     for origin in &v.origins {
-                        let key = format!("{}:{:?}:{:?}", origin.file_path, origin.line, origin.kind);
-                        if !seen.contains_key(&key) {
-                            seen.insert(key, origin.clone());
-                        }
+                        let key =
+                            format!("{}:{:?}:{:?}", origin.file_path, origin.line, origin.kind);
+                        seen.entry(key).or_insert_with(|| origin.clone());
                     }
                 }
             }

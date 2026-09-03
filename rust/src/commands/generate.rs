@@ -40,21 +40,11 @@ pub async fn generate(args: GenerateArgs) -> Result<u8, anyhow::Error> {
     let (model, config) = crate::core::pipeline::load_project(&root).await;
 
     let output = match args.command {
-        GenerateCommand::EnvExample => {
-            crate::generators::generate_env_example(&model, &config)
-        }
-        GenerateCommand::EnvDoc => {
-            crate::generators::generate_environment_doc(&model, &config)
-        }
-        GenerateCommand::EnvTypes => {
-            crate::generators::generate_env_types(&model, &config)
-        }
-        GenerateCommand::ConfigSchema => {
-            crate::generators::generate_config_schema()
-        }
-        GenerateCommand::ConfigTemplate => {
-            crate::generators::generate_config_template()
-        }
+        GenerateCommand::EnvExample => crate::generators::generate_env_example(&model, &config),
+        GenerateCommand::EnvDoc => crate::generators::generate_environment_doc(&model, &config),
+        GenerateCommand::EnvTypes => crate::generators::generate_env_types(&model, &config),
+        GenerateCommand::ConfigSchema => crate::generators::generate_config_schema(),
+        GenerateCommand::ConfigTemplate => crate::generators::generate_config_template(),
         GenerateCommand::GithubActions => {
             crate::generators::generate_github_actions(&model, &config)
         }

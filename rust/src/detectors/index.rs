@@ -1,5 +1,5 @@
-use crate::models::{Origin, ProjectModel};
 use crate::detectors::{Definition, IndexedModel};
+use crate::models::{Origin, ProjectModel};
 use std::collections::{HashMap, HashSet};
 
 /// Build the format-agnostic index detectors operate on.

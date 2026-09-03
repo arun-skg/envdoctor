@@ -1,4 +1,4 @@
-use crate::detectors::{Detector, IndexedModel, make_finding};
+use crate::detectors::{make_finding, Detector, IndexedModel};
 use crate::models::{Finding, ProjectModel, Severity};
 use std::collections::{BTreeSet, HashSet};
 
@@ -88,7 +88,10 @@ impl Detector for EnvironmentDiffDetector {
                     "environment-diff",
                     Severity::Warning,
                     &entry.name,
-                    format!("{} → {} · {} missing in {}", reference, other, entry.name, missing_in),
+                    format!(
+                        "{} → {} · {} missing in {}",
+                        reference, other, entry.name, missing_in
+                    ),
                     vec![],
                 ));
             }

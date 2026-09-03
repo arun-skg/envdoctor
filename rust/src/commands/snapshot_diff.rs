@@ -67,11 +67,19 @@ pub async fn snapshot_diff(args: SnapshotDiffArgs) -> Result<u8, anyhow::Error> 
             );
         }
         println!("{}", serde_json::to_string_pretty(&value)?);
-        return Ok(if diff.equivalent { EXIT_OK } else { EXIT_ISSUES });
+        return Ok(if diff.equivalent {
+            EXIT_OK
+        } else {
+            EXIT_ISSUES
+        });
     }
 
     render_human(&diff);
-    Ok(if diff.equivalent { EXIT_OK } else { EXIT_ISSUES })
+    Ok(if diff.equivalent {
+        EXIT_OK
+    } else {
+        EXIT_ISSUES
+    })
 }
 
 fn render_human(diff: &RuntimeDiff) {
