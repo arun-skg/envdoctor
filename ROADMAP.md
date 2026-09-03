@@ -3,7 +3,7 @@
 envdoctor is a local-first environment-variable consistency checker that reconciles
 your `.env` files against your code, Docker Compose, Kubernetes manifests, and CI —
 cross-file, fully offline, values never printed. It ships as **native ports** for
-seven ecosystems so teams can adopt it in whatever language they already use.
+eight ecosystems so teams can adopt it in whatever language they already use.
 
 This roadmap is a living document. Most planned work is filed as issues and labelled
 [`help wanted`](https://github.com/arun-skg/envdoctor/labels/help%20wanted) —
@@ -19,12 +19,15 @@ This roadmap is a living document. Most planned work is filed as issues and labe
 - **Core CLI** — `init`, `scan`, `fix`, `diff`, `sync`, `snapshot`.
 - **10 detectors** across `.env`, code, Docker Compose, Kubernetes, and GitHub Actions.
 - **Output formats** — human, JSON, SARIF.
-- **Native ports at full parity** — Node (reference), Python, Go, Ruby, PHP, Perl, Java.
+- **Native ports at full parity** — Node (reference), Python, Go, Rust, Ruby, PHP, Perl, Java.
 - **Local-first guarantees** — no network, no telemetry, values never printed.
 
-## 🚧 In progress
+## 🎉 Recently completed
 
-- **Rust port** — a `rust/` tree exists; bringing it to parity and publishing to crates.io — [#68](https://github.com/arun-skg/envdoctor/issues/68).
+- **Rust port** — finished and published to crates.io as [`arun-envdoctor`](https://crates.io/crates/arun-envdoctor), byte-identical parity with a Rust CI gate ([#68](https://github.com/arun-skg/envdoctor/issues/68)).
+- **Rust CI** enforces `cargo fmt --check` + `clippy -D warnings` ([#103](https://github.com/arun-skg/envdoctor/issues/103)); file generators restored to byte-identical parity ([#110](https://github.com/arun-skg/envdoctor/issues/110)).
+- **`examples/`** with runnable sample projects for each detector ([#93](https://github.com/arun-skg/envdoctor/issues/93)).
+- Dynamic Go/Java version badges ([#67](https://github.com/arun-skg/envdoctor/issues/67)) and framework public-prefix coverage ([#56](https://github.com/arun-skg/envdoctor/issues/56)).
 
 ## 🗺️ Planned — help wanted
 
