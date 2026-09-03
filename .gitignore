@@ -8,6 +8,8 @@ coverage/
 !.env.example
 !tests/fixtures/**/.env
 !tests/fixtures/**/.env.*
+!examples/**/.env
+!examples/**/.env.*
 
 # Java
 java/target/
