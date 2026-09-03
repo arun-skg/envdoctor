@@ -1,0 +1,43 @@
+name: Rust CI
+
+on:
+  push:
+    paths:
+      - "rust/**"
+      - ".github/workflows/rust-ci.yml"
+  pull_request:
+    paths:
+      - "rust/**"
+      - ".github/workflows/rust-ci.yml"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: rust
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Test
+        run: cargo test
+      - name: Build (release)
+        run: cargo build --release
+
+  lint:
+    # Advisory: fmt/clippy are not yet enforced on the port. Surfaced here so
+    # the debt is visible; promote to the required `test` job once clean.
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    defaults:
+      run:
+        working-directory: rust
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+      - name: Format check
+        run: cargo fmt --check
+      - name: Clippy
+        run: cargo clippy --all-targets -- -D warnings

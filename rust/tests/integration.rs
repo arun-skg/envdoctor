@@ -1,5 +1,4 @@
 use std::fs;
-use std::path::PathBuf;
 use tempfile::TempDir;
 use envdoctor::commands::{scan, init, generate};
 use envdoctor::commands::shared::OutputFormat;

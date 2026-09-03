@@ -21,7 +21,6 @@ pub fn render_sarif(findings: &[Finding], root_dir: &camino::Utf8PathBuf) -> Str
                 "driver": {
                     "name": "envdoctor",
                     "informationUri": "https://github.com/arun-skg/envdoctor",
-                    "version": env!("CARGO_PKG_VERSION"),
                     "rules": render_rules(),
                 }
             },
