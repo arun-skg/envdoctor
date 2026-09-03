@@ -31,7 +31,7 @@ jobs:
       - uses: actions/checkout@v7
       # setup-java writes ~/.m2/settings.xml with the Central server credentials.
       # GPG is imported manually below (setup-java's built-in import is flaky).
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v6
         with:
           distribution: "temurin"
           java-version: "17"
