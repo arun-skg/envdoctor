@@ -24,6 +24,7 @@
 [![Go module](https://img.shields.io/github/v/tag/arun-skg/envdoctor?filter=go/*&label=Go&color=00ADD8&logo=go&logoColor=white)](https://pkg.go.dev/github.com/arun-skg/envdoctor/go)
 [![crates.io](https://img.shields.io/crates/v/arun-envdoctor.svg?label=crates.io&logo=rust&logoColor=white)](https://crates.io/crates/arun-envdoctor)
 [![CPAN](https://img.shields.io/cpan/v/App-Envdoctor.svg?label=CPAN&logo=perl&logoColor=white)](https://metacpan.org/dist/App-Envdoctor)
+[![NuGet](https://img.shields.io/nuget/v/envdoctor.svg?label=NuGet&logo=nuget&logoColor=white)](https://www.nuget.org/packages/envdoctor)
 
 **The ESLint for environment variables.** envdoctor audits every place your config lives — `.env` files, source code, Docker Compose, Kubernetes manifests, and GitHub Actions — and fails your build *before* a missing key, a dead variable, or a `NEXT_PUBLIC_` secret leak fails your deploy.
 
@@ -152,6 +153,7 @@ errors so it drops straight into CI.
 | **PHP** ([`php/`](./php)) | `composer require --dev arun-skg/envdoctor` | `getenv`, `$_ENV`, `$_SERVER` |
 | **Java** ([`java/`](./java)) | [`io.github.arun-skg:envdoctor`](https://central.sonatype.com/artifact/io.github.arun-skg/envdoctor) | `System.getenv("X")` |
 | **Perl** ([`perl/`](./perl)) | `cpanm App::Envdoctor` | `$ENV{X}` |
+| **.NET** ([`dotnet/`](./dotnet)) | `dotnet tool install -g envdoctor` | `Environment.GetEnvironmentVariable("X")` |
 
 All ports share the same CLI shape:
 
@@ -171,7 +173,7 @@ findings (and `--json` output) in every language. The native ports are now at
 `scan` / `diff` / `sync` / `init` / `fix` subcommands, `--json` output, and
 Docker Compose / Kubernetes / GitHub Actions scanning.
 
-| Detector | Node | Python · Go · Rust · Ruby · PHP · Perl · Java |
+| Detector | Node | Python · Go · Rust · Ruby · PHP · Perl · Java · .NET |
 |---|:---:|:---:|
 | missing / undefined-in-source | ✅ | ✅ |
 | unused | ✅ | ✅ |

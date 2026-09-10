@@ -37,6 +37,10 @@ go/envdoctor
 # Rust
 rust/target/
 
+# .NET
+dotnet/**/bin/
+dotnet/**/obj/
+
 # Generated downloads chart artifacts (published to the npm-downloads branch)
 /downloads.svg
 /downloads.json

@@ -1,0 +1,39 @@
+# Publishes the .NET port to NuGet on a `dotnet-v*` tag.
+#
+# NuGet has no OIDC trusted publishing for API-key pushes, so this uses an
+# API key. One-time setup:
+#   nuget.org → Account → API Keys → create a key scoped to Push for the
+#   `envdoctor` package, then add it as a repo secret:
+#     Settings → Secrets and variables → Actions → New secret
+#     name: NUGET_API_KEY
+# The package must be owned by that account (the first push claims the name).
+#
+# Release: bump `<Version>` in dotnet/src/Envdoctor/Envdoctor.csproj, then push
+# a matching tag:
+#   git tag dotnet-v0.1.2 && git push origin dotnet-v0.1.2
+name: .NET Release
+
+on:
+  push:
+    tags:
+      - "dotnet-v*"
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: dotnet
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: "8.0.x"
+      - name: Verify
+        run: dotnet test
+      - name: Pack
+        run: dotnet pack -c Release -o out
+      - name: Publish to NuGet
+        run: dotnet nuget push out/*.nupkg --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json --skip-duplicate
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}

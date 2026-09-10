@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="src/Envdoctor/Envdoctor.csproj" />
+  <Project Path="tests/Envdoctor.Tests/Envdoctor.Tests.csproj" />
+</Solution>
