@@ -1,0 +1,29 @@
+{
+  // JSR (jsr.io) publish config for envdoctor — see .github/workflows/jsr-publish.yml.
+  //
+  // npm dependencies are referenced with `npm:` specifiers below; JSR translates
+  // these into `dependencies` in a generated package.json for npm consumers, and
+  // resolves them from the npm registry for Deno consumers. No source shims are
+  // needed for the npm: packages or for the `node:*` builtins Deno polyfills.
+  "name": "@arunskg/envdoctor",
+  "version": "0.1.2",
+  "exports": {
+    ".": "./src/cli.ts"
+  },
+  "imports": {
+    "chalk": "npm:chalk@^6.0.0",
+    "commander": "npm:commander@^15.0.0",
+    "fast-glob": "npm:fast-glob@^3.3.2",
+    "yaml": "npm:yaml@^2.5.0",
+    "zod": "npm:zod@^4.4.3"
+  },
+  "publish": {
+    "include": [
+      "src",
+      "package.json",
+      "jsr.json",
+      "LICENSE",
+      "README.md"
+    ]
+  }
+}
