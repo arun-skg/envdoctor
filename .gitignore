@@ -41,6 +41,9 @@ rust/target/
 dotnet/**/bin/
 dotnet/**/obj/
 
+# Swift
+swift/.build/
+
 # Generated downloads chart artifacts (published to the npm-downloads branch)
 /downloads.svg
 /downloads.json
