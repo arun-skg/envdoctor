@@ -1,4 +1,9 @@
 import Foundation
+#if canImport(Darwin)
+import Darwin
+#elseif canImport(Glibc)
+import Glibc
+#endif
 
 /// A file that a parser claimed during discovery.
 public struct DiscoveredFile {
@@ -108,7 +113,11 @@ public enum Discover {
     /// realpath(3): resolves symlinks and firmlinks exactly like Node's
     /// fs.realpathSync.
     static func realpath(_ path: String) -> String? {
+        #if canImport(Darwin)
         guard let resolved = Darwin.realpath(path, nil) else { return nil }
+        #else
+        guard let resolved = Glibc.realpath(path, nil) else { return nil }
+        #endif
         defer { free(resolved) }
         return String(cString: resolved)
     }
