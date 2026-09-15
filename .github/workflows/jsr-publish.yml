@@ -1,0 +1,70 @@
+# Publishes @arunskg/envdoctor to JSR (https://jsr.io) using OIDC trusted
+# publishing from GitHub Actions — no long-lived JSR API token is stored in a
+# GitHub secret. The npm release (release.yml) is untouched; JSR is additive.
+#
+# One-time setup (JSR side):
+#   1. Sign in to https://jsr.io with the GitHub account that owns this repo.
+#   2. Create the package @arunskg/envdoctor.
+#   3. In the package's "Settings" -> "Trusted Publishers", add a GitHub Actions
+#      trusted publisher for this repository and workflow file
+#      (.github/workflows/jsr-publish.yml) on tag pattern `jsr-v*`.
+#   4. Ensure the `version` field in jsr.json is bumped before tagging:
+#      `git tag jsr-v0.1.3 && git push origin jsr-v0.1.3` publishes that version.
+#
+# On every push of a `jsr-v*` tag, the `publish` job below authenticates to JSR
+# via the GitHub OIDC id-token and `npx jsr publish --yes` publishes the
+# package. On pull requests touching the TypeScript core, the `deno-check` job
+# type-checks the package and runs a publish dry-run (including JSR slow-types
+# checks) so breakage is caught before a tag is pushed.
+#
+# Local equivalents:
+#   deno check src/cli.ts
+#   deno publish --dry-run
+
+name: JSR Publish
+
+on:
+  push:
+    tags: ["jsr-v*"]
+  pull_request:
+    branches: [main]
+    paths:
+      - "src/**"
+      - "jsr.json"
+      - "package.json"
+
+jobs:
+  deno-check:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Install dependencies (byonm node_modules)
+        run: deno install
+
+      - name: Type-check the package
+        run: deno check src/cli.ts
+
+      - name: JSR publish dry-run (incl. slow-types)
+        run: deno publish --dry-run
+
+  publish:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # required for JSR OIDC trusted publishing
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Publish to JSR
+        run: npx jsr publish --yes

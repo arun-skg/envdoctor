@@ -147,6 +147,7 @@ errors so it drops straight into CI.
 | Ecosystem | Install | Detects |
 |-----------|---------|---------|
 | **Node** (reference) | `npm install -g @arunskg/envdoctor` | `process.env.X`, `import.meta.env.X` |
+| **Deno** ([`jsr.json`](./jsr.json)) | `deno run -A jsr:@arunskg/envdoctor` | `process.env.X`, `import.meta.env.X` |
 | **Python** ([`python/`](./python)) | `pip install arun-envdoctor` | `os.getenv`, `os.environ[...]`, `os.environ.get` |
 | **Go** ([`go/`](./go)) | `go install github.com/arun-skg/envdoctor/go/cmd/envdoctor@latest` | `os.Getenv`, `os.LookupEnv` |
 | **Rust** ([`rust/`](./rust)) | `cargo install arun-envdoctor` | `std::env::var`, `env!`, `option_env!` |
@@ -166,7 +167,8 @@ envdoctor scan --strict       # treat warnings as errors too
 
 > **Note:** the Python distribution is named `arun-envdoctor` on PyPI (the bare
 > name is blocked as too similar to an existing project), but the installed
-> command and importable package are both `envdoctor`.
+> command and importable package are both `envdoctor`. The Deno row runs the
+> same TypeScript core as Node, published to [JSR](https://jsr.io/@arunskg/envdoctor).
 
 Each port has its own README, test suite, and CI workflow, and they are kept
 **behaviour-identical** — the same project produces byte-for-byte-equivalent
