@@ -1,0 +1,54 @@
+node_modules/
+dist/
+coverage/
+*.tgz
+.DS_Store
+.env
+.env.*
+!env.example
+!tests/fixtures/**/.env
+!tests/fixtures/**/.env.*
+
+# Java
+java/target/
+
+# Perl
+perl/blib/
+perl/Makefile
+perl/pm_to_blib
+perl/MYMETA.*
+
+# PHP
+php/vendor/
+php/composer.lock
+
+# Ruby
+ruby/*.gem
+
+# Python build artifacts
+python/build/
+python/dist/
+python/*.egg-info/
+python/src/*.egg-info/
+python/.pytest_cache/
+__pycache__/
+
+# Go
+# go/envdoctor
+
+# Rust
+rust/target/
+
+# Generated downloads chart artifacts (published to the npm-downloads branch)
+/downloads.svg
+/downloads.json
+
+# Local AI session log (SessionEnd hook) — kept local, not published
+MEMORY.md
+
+# Perl dist artifacts
+perl/App-Envdoctor-*
+perl/MYMETA.*
+perl/META.yml
+perl/META.json
+perl/META.*
