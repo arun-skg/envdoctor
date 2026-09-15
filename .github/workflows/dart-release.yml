@@ -1,0 +1,39 @@
+# Publishes the Dart port to pub.dev on a `dart-v*` tag.
+#
+# pub.dev supports automated publishing from GitHub Actions via OIDC, so no
+# long-lived API token lives in this repo. One-time setup:
+#   1. Sign in to https://pub.dev with the Google account that owns (or is an
+#      uploader on) the `envdoctor` package.
+#   2. Open the package's Admin tab → Automated publishing → enable GitHub
+#      Actions: repository `arun-skg/envdoctor`, tag pattern `dart-v*`.
+#   3. Create the `pub` environment in this repo's Settings → Environments
+#      (optional but recommended: restrict it to the `dart-v*` tag).
+#
+# Fallback if OIDC is unavailable: create a publishing token at
+# https://pub.dev/my-publishers, store it as the PUB_TOKEN secret, and add a
+# step `run: echo ${{ secrets.PUB_TOKEN }} | dart pub token add https://pub.dev`.
+name: Dart Release
+
+on:
+  push:
+    tags:
+      - "dart-v*"
+
+permissions:
+  contents: read
+  id-token: write # required for pub.dev OIDC automated publishing
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: pub
+    defaults:
+      run:
+        working-directory: dart
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: "3.13"
+      - run: dart pub get
+      - run: dart pub publish --force
