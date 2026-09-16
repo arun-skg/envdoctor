@@ -1,0 +1,10 @@
+# Dart toolchain artifacts
+.dart_tool/
+build/
+.packages
+
+# Library packages do not commit the lockfile
+pubspec.lock
+
+# Locally compiled executables
+bin/envdoctor

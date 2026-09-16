@@ -1,0 +1,10 @@
+include: package:lints/recommended.yaml
+
+analyzer:
+  errors:
+    # Keep CI strict.
+    unused_import: error
+    dead_code: error
+
+formatter:
+  page_width: 100
