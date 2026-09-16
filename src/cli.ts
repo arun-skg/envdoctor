@@ -1,5 +1,7 @@
 import { Command, CommanderError } from "commander";
-import pkg from "../package.json";
+// `with { type: "json" }` is required by Deno/JSR; tsup inlines the JSON at
+// bundle time so the npm build is unaffected.
+import pkg from "../package.json" with { type: "json" };
 import { EXIT_USAGE } from "./core/exit-codes.js";
 import { runDiff } from "./commands/diff.js";
 import { runFix } from "./commands/fix.js";
