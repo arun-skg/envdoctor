@@ -1,0 +1,27 @@
+name: Environment Audit
+
+# Dogfoods the envdoctor GitHub Action on this repo using the action in this
+# checkout (`uses: ./`), which also serves as an end-to-end test of action.yml.
+# Non-blocking: it surfaces annotations + a job summary without failing CI.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  envdoctor:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run envdoctor
+        uses: ./
+        with:
+          version: latest
+          fail-on-error: false
+          upload-sarif: true

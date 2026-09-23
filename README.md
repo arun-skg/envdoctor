@@ -518,22 +518,53 @@ code scanning or any SARIF-aware tool.
 
 ## CI integration
 
+### GitHub Action (recommended)
+
+The official [`arun-skg/envdoctor`](https://github.com/arun-skg/envdoctor)
+action scans on every push/PR, posts **inline annotations** on the exact
+files and lines, writes a **job summary**, and (optionally) uploads results to
+**code scanning** — no wrapper scripts required.
+
 ```yaml
 # .github/workflows/env-audit.yml
 name: Environment Audit
 on: [push, pull_request]
+
+permissions:
+  contents: read
+  security-events: write   # only needed for the code-scanning upload
+
 jobs:
   envdoctor:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v4
+      - uses: arun-skg/envdoctor@v1
+        with:
+          strict: true            # treat warnings as failures (optional)
+```
+
+Inputs (all optional): `working-directory` (`.`), `version` (`latest`),
+`node-version` (`20`), `strict` (`false`), `only` (detector ids),
+`baseline` (path), `args` (extra raw flags), `upload-sarif` (`true`),
+`fail-on-error` (`true`). Outputs: `exit-code`, `sarif-file`, `error-count`,
+`warning-count`.
+
+If your repo doesn't have code scanning enabled, set `upload-sarif: false` —
+you still get inline annotations and the job summary.
+
+### Plain npx
+
+Prefer no third-party action? Run the CLI directly:
+
+```yaml
       - uses: actions/setup-node@v5
         with:
           node-version: '22'
       - run: npx @arunskg/envdoctor scan --strict
 ```
 
-For code scanning, add `--format sarif` and upload the result with
+For code scanning this way, add `--format sarif` and upload the result with
 `github/codeql-action/upload-sarif`.
 
 ## Security
