@@ -78,6 +78,22 @@
   // to the orphan `npm-downloads` branch. Fails silently — the pill stays
   // hidden if the number can't be fetched, so the navbar never shows a broken
   // or zero count.
+  // Compact large counts to fewer digits: 6008 -> "6k", 6540 -> "6.5k",
+  // 1200000 -> "1.2M". Lowercase the thousands suffix to match "6k"; keep
+  // M/B uppercase. Falls back to grouped digits if Intl compact is missing.
+  function compact(n) {
+    try {
+      return new Intl.NumberFormat("en", {
+        notation: "compact",
+        maximumFractionDigits: 1,
+      })
+        .format(n)
+        .replace(/K$/, "k");
+    } catch (e) {
+      return n.toLocaleString();
+    }
+  }
+
   (function () {
     var link = document.getElementById("nav-downloads");
     var out = document.getElementById("nav-downloads-count");
@@ -88,7 +104,7 @@
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (d) {
         if (!d || typeof d.total !== "number" || d.total <= 0) return;
-        out.textContent = d.total.toLocaleString() + " downloads";
+        out.textContent = compact(d.total) + " downloads";
         link.hidden = false;
       })
       .catch(function () { /* leave hidden */ });
