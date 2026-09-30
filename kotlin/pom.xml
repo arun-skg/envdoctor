@@ -5,11 +5,13 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>io.github.arun-skg</groupId>
-  <artifactId>envdoctor</artifactId>
+  <!-- Distinct from the Java port (io.github.arun-skg:envdoctor); both cannot
+       share Maven Central coordinates. -->
+  <artifactId>envdoctor-kotlin</artifactId>
   <version>0.1.2</version>
   <packaging>jar</packaging>
 
-  <name>envdoctor</name>
+  <name>envdoctor-kotlin</name>
   <description>Local-first consistency checker for environment variables (native Kotlin/JVM port)</description>
   <url>https://github.com/arun-skg/envdoctor</url>
 
