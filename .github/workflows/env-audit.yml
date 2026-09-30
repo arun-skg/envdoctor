@@ -1,0 +1,30 @@
+name: Environment Audit
+
+# Dogfoods the envdoctor GitHub Action on this repo using the action in this
+# checkout (`uses: ./`), which also serves as an end-to-end test of action.yml.
+# Non-blocking: it surfaces annotations + a job summary without failing CI.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  envdoctor:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run envdoctor
+        uses: ./
+        with:
+          version: latest
+          fail-on-error: false
+          # This repo's own test fixtures intentionally contain "broken" env
+          # setups, so a code-scanning upload would always show alerts. Keep the
+          # self-test to annotations + job summary only.
+          upload-sarif: false

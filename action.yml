@@ -1,0 +1,116 @@
+name: 'envdoctor'
+description: 'ESLint for environment variables — catch missing, unused, duplicate, type-mismatched, and leaked env vars across .env files, source, Docker Compose, Kubernetes, and CI. Runs locally, no telemetry.'
+author: 'arun-skg'
+branding:
+  icon: 'check-circle'
+  color: 'blue'
+
+inputs:
+  working-directory:
+    description: 'Directory to scan.'
+    required: false
+    default: '.'
+  version:
+    description: 'Version of @arunskg/envdoctor to run from npm (e.g. "0.1.2" or "latest").'
+    required: false
+    default: 'latest'
+  node-version:
+    description: 'Node.js version used to run envdoctor.'
+    required: false
+    default: '20'
+  strict:
+    description: 'Treat warnings as failures (passes --strict).'
+    required: false
+    default: 'false'
+  only:
+    description: 'Comma-separated detector ids to run (default: all). Passed as --only.'
+    required: false
+    default: ''
+  baseline:
+    description: 'Path to a baseline file whose findings are suppressed. Passed as --baseline.'
+    required: false
+    default: ''
+  args:
+    description: 'Extra raw arguments appended to `envdoctor scan`.'
+    required: false
+    default: ''
+  upload-sarif:
+    description: 'Upload results to GitHub code scanning (needs permissions: security-events: write; ignored if unavailable).'
+    required: false
+    default: 'true'
+  fail-on-error:
+    description: 'Fail the job when error-severity findings are present.'
+    required: false
+    default: 'true'
+
+outputs:
+  exit-code:
+    description: 'envdoctor scan exit code — 0 clean, 1 issues found, 2 usage/config error.'
+    value: ${{ steps.scan.outputs.exit-code }}
+  sarif-file:
+    description: 'Path to the generated SARIF file.'
+    value: ${{ steps.scan.outputs.sarif-file }}
+  error-count:
+    description: 'Number of error-severity findings.'
+    value: ${{ steps.annotate.outputs.error-count }}
+  warning-count:
+    description: 'Number of warning-severity findings.'
+    value: ${{ steps.annotate.outputs.warning-count }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.node-version }}
+
+    - name: Run envdoctor scan
+      id: scan
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: |
+        set +e
+        sarif="${RUNNER_TEMP:-/tmp}/envdoctor.sarif"
+        cmd=(npx --yes "@arunskg/envdoctor@${{ inputs.version }}" scan --format sarif)
+        [ "${{ inputs.strict }}" = "true" ] && cmd+=(--strict)
+        [ -n "${{ inputs.only }}" ] && cmd+=(--only "${{ inputs.only }}")
+        [ -n "${{ inputs.baseline }}" ] && cmd+=(--baseline "${{ inputs.baseline }}")
+        # shellcheck disable=SC2206
+        extra=(${{ inputs.args }})
+        "${cmd[@]}" "${extra[@]}" > "$sarif"
+        code=$?
+        {
+          echo "exit-code=$code"
+          echo "sarif-file=$sarif"
+        } >> "$GITHUB_OUTPUT"
+        if [ "$code" = "2" ]; then
+          echo "::error::envdoctor failed to run (usage/config error, exit 2). Check the arguments and logs above."
+        fi
+        exit 0
+
+    - name: Annotate findings
+      id: annotate
+      shell: bash
+      run: node "${{ github.action_path }}/scripts/gha-annotate.mjs" "${{ steps.scan.outputs.sarif-file }}"
+
+    - name: Upload SARIF to code scanning
+      if: ${{ inputs.upload-sarif == 'true' && steps.scan.outputs.exit-code != '2' }}
+      continue-on-error: true
+      uses: github/codeql-action/upload-sarif@v3
+      with:
+        sarif_file: ${{ steps.scan.outputs.sarif-file }}
+        category: envdoctor
+
+    - name: Enforce result
+      shell: bash
+      run: |
+        code="${{ steps.scan.outputs.exit-code }}"
+        if [ "$code" = "2" ]; then
+          exit 2
+        fi
+        if [ "${{ inputs.fail-on-error }}" = "true" ] && [ "$code" = "1" ]; then
+          echo "::error::envdoctor found environment variable issues that fail the build. See annotations above."
+          exit 1
+        fi
+        exit 0
