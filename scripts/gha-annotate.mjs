@@ -9,7 +9,7 @@ import { readFileSync, appendFileSync } from "node:fs";
 const sarifPath = process.argv[2];
 
 /** @type {Array<{ruleId?:string, level?:string, message?:{text?:string}, locations?:any[]}>} */
-let results = [];
+let results;
 try {
   const doc = JSON.parse(readFileSync(sarifPath, "utf8"));
   results = doc?.runs?.[0]?.results ?? [];
