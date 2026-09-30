@@ -1,0 +1,42 @@
+# Publishes the Elixir package to Hex (https://hex.pm) on an `elixir-v*` tag.
+#
+# One-time setup (Hex side):
+#   1. Create a Hex account: `mix hex.user register` (or sign in on hex.pm).
+#   2. Generate a publish key scoped to api:write:
+#        mix hex.user key generate --key-name envdoctor-ci --permission api:write
+#   3. Add it as the GitHub Actions secret HEX_API_KEY.
+#   Note: the Hex package name is `envdoctor` (see mix.exs `package/0`). If that
+#   name is already taken on Hex, rename it there before the first publish.
+#
+# Before tagging: bump `@version` in elixir/mix.exs, then
+#   git tag elixir-v1.0.0 && git push origin elixir-v1.0.0
+name: Elixir Release
+
+on:
+  push:
+    tags:
+      - "elixir-v*"
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: elixir
+    steps:
+      - uses: actions/checkout@v7
+      - uses: erlef/setup-beam@v1
+        with:
+          otp-version: "27"
+          elixir-version: "1.17"
+      - name: Install deps
+        run: mix deps.get
+      - name: Test
+        run: mix test
+      - name: Publish to Hex
+        env:
+          HEX_API_KEY: ${{ secrets.HEX_API_KEY }}
+        run: mix hex.publish --yes

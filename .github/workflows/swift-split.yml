@@ -1,0 +1,55 @@
+# Keeps the read-only split repo arun-skg/envdoctor-swift in sync with swift/.
+#
+# SwiftPM cannot consume a package from a subdirectory — Package.swift must be at
+# a repo root. The split repo (envdoctor-swift) holds just the swift/ subtree at
+# its root; consumers add:
+#   .package(url: "https://github.com/arun-skg/envdoctor-swift", from: "1.0.0")
+# SwiftPM reads the version from the git tag, so this pushes a clean semver tag.
+#
+# This workflow:
+#   * on push to main touching swift/** -> refresh the split repo's main branch
+#   * on a `swift-v*` tag               -> also push a clean semver tag (v1.0.0)
+#                                          to the split repo for SwiftPM to resolve
+#
+# One-time setup:
+#   1. Create the empty repo arun-skg/envdoctor-swift.
+#   2. Ensure SPLIT_REPO_TOKEN (a PAT/fine-grained token) has contents:write on it.
+#
+# Required secret:
+#   SPLIT_REPO_TOKEN — token with contents:write on arun-skg/envdoctor-swift.
+name: Swift Split
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "swift/**"
+      - ".github/workflows/swift-split.yml"
+    tags:
+      - "swift-v*"
+
+permissions:
+  contents: read
+
+jobs:
+  split:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          # Don't persist GITHUB_TOKEN as a git credential — it would override
+          # the SPLIT_REPO_TOKEN embedded in the push URL and 403 on the split repo.
+          persist-credentials: false
+      - name: Split swift/ subtree
+        run: git subtree split --prefix=swift -b swift-split
+      - name: Push to split repo
+        env:
+          TOKEN: ${{ secrets.SPLIT_REPO_TOKEN }}
+        run: |
+          remote="https://x-access-token:${TOKEN}@github.com/arun-skg/envdoctor-swift.git"
+          git push --force "$remote" swift-split:refs/heads/main
+          if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
+            version="${GITHUB_REF_NAME#swift-}"   # swift-v1.0.0 -> v1.0.0
+            git push "$remote" "swift-split:refs/tags/${version}"
+          fi
