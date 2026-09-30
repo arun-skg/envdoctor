@@ -8,7 +8,7 @@
   <!-- Distinct from the Java port (io.github.arun-skg:envdoctor); both cannot
        share Maven Central coordinates. -->
   <artifactId>envdoctor-kotlin</artifactId>
-  <version>0.1.2</version>
+  <version>1.0.0</version>
   <packaging>jar</packaging>
 
   <name>envdoctor-kotlin</name>

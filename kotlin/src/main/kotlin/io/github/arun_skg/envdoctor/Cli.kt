@@ -12,7 +12,7 @@ import kotlin.io.path.exists
 /** Command-line entry point for the native Kotlin envdoctor. */
 object Cli {
 
-    const val VERSION = "0.1.2"
+    const val VERSION = "1.0.0"
 
     @JvmStatic
     fun run(args: Array<String>): Int {
