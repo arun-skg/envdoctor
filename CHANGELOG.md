@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## [1.0.0] - 2026-09-30
+
+First stable release. The CLI surface, exit-code contract, detector set, and
+output formats (human/JSON/SARIF) are now considered stable across the released
+native ports (Node, Python, Ruby, Go, Java, PHP, Rust).
+
 ### Fixed
 
 - The dotenv parser already accepted a space after `export`; this extends it to accept tabs and runs of spaces/tabs as the separator.
