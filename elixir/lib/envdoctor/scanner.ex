@@ -52,7 +52,7 @@ defmodule Envdoctor.Scanner do
   ]
 
   # Secret-looking name pattern (case-insensitive).
-  @secret_name ~r/SECRET|TOKEN|PASSWORD|PASSWD|PRIVATE|CREDENTIAL|API_?KEY|ACCESS_?KEY|AUTH/i
+  @secret_name ~r/SECRET|TOKEN|PASSWORD|PASSWD|PASSPHRASE|(^|[^A-Za-z])PASS([^A-Za-z]|$)|API[_A-Z]*KEY|PRIVATE[_-]?KEY|CREDENTIALS/i
 
   # Weak/placeholder secret value pattern (case-insensitive, whole-value).
   @weak_secret_value ~r/^(changeme|change_me|placeholder|x{3,}|todo|secret|password|passwd|test|example|sample|dummy|your[_-].*|<.*>|\$\{.*\})$/i

@@ -5,7 +5,7 @@ import Foundation
 /// `-C/--root` global flag and the `generate` subcommand from the other
 /// native ports.
 public enum Program {
-    public static let version = "1.0.0"
+    public static let version = "1.0.1"
 
     public static func main(_ argv: [String]) -> Int {
         var args = Array(argv)

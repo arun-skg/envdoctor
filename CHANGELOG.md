@@ -15,6 +15,15 @@ All notable changes to this project will be documented in this file.
   still detected. The pattern uses no look-around so it remains portable to
   every native port's regex engine.
 
+### Changed
+
+- **Unified the secret-name heuristic across all ports.** Previously the ports
+  had diverged into two different patterns (the Node/Dart/.NET/Rust/Swift set
+  vs. a `PRIVATE|CREDENTIAL|ACCESS_?KEY|AUTH` set in Python/Ruby/Go/Java/PHP/
+  Perl/Elixir/Kotlin), breaking cross-port parity. All 12 ports now use the
+  single canonical pattern above, so output is identical across languages
+  again. The former `AUTH`/`ACCESS_KEY`/bare-`PRIVATE` matches no longer apply.
+
 ## [1.0.0] - 2026-09-30
 
 First stable release. The CLI surface, exit-code contract, detector set, and

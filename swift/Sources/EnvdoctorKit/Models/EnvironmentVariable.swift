@@ -28,8 +28,8 @@ public struct EnvironmentVariable {
 }
 
 public func isSecretName(_ name: String) -> Bool {
-    // /(SECRET|TOKEN|PASSWORD|PASS|API[_A-Z]*KEY|PRIVATE[_-]?KEY|CREDENTIALS)/i
-    let pattern = "(SECRET|TOKEN|PASSWORD|PASS|API[_A-Z]*KEY|PRIVATE[_-]?KEY|CREDENTIALS)"
+    // /(SECRET|TOKEN|PASSWORD|PASSWD|PASSPHRASE|(^|[^A-Za-z])PASS([^A-Za-z]|$)|API[_A-Z]*KEY|PRIVATE[_-]?KEY|CREDENTIALS)/i
+    let pattern = "(SECRET|TOKEN|PASSWORD|PASSWD|PASSPHRASE|(^|[^A-Za-z])PASS([^A-Za-z]|$)|API[_A-Z]*KEY|PRIVATE[_-]?KEY|CREDENTIALS)"
     guard let re = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive]) else { return false }
     let range = NSRange(name.startIndex..<name.endIndex, in: name)
     return re.firstMatch(in: name, range: range) != nil

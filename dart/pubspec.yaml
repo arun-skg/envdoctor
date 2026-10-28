@@ -4,7 +4,7 @@ description: >-
   envdoctor: detects missing, unused, duplicate, and mismatched variables
   across .env files, docker-compose, GitHub Actions, Kubernetes manifests,
   and source code.
-version: 0.1.2
+version: 1.0.1
 repository: https://github.com/arun-skg/envdoctor
 
 environment:

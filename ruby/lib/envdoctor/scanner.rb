@@ -19,7 +19,7 @@ module Envdoctor
       NEXT_PUBLIC_ VITE_ REACT_APP_ EXPO_PUBLIC_ GATSBY_ NUXT_PUBLIC_ VUE_APP_ PUBLIC_
     ].freeze
 
-    SECRET_RE = /SECRET|TOKEN|PASSWORD|PASSWD|PRIVATE|CREDENTIAL|API_?KEY|ACCESS_?KEY|AUTH/i.freeze
+    SECRET_RE = /SECRET|TOKEN|PASSWORD|PASSWD|PASSPHRASE|(^|[^A-Za-z])PASS([^A-Za-z]|$)|API[_A-Z]*KEY|PRIVATE[_-]?KEY|CREDENTIALS/i.freeze
 
     WEAK_VALUE_RE =
       /\A(changeme|change_me|placeholder|x{3,}|todo|secret|password|passwd|test|example|sample|dummy|your[_-].*|<.*>|\$\{.*\})\z/i.freeze

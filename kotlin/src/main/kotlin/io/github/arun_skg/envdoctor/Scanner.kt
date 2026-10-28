@@ -56,7 +56,7 @@ object Scanner {
 
     /** Secret-looking name pattern (case-insensitive). */
     val SECRET_NAME = Regex(
-        """SECRET|TOKEN|PASSWORD|PASSWD|PRIVATE|CREDENTIAL|API_?KEY|ACCESS_?KEY|AUTH""",
+        """SECRET|TOKEN|PASSWORD|PASSWD|PASSPHRASE|(^|[^A-Za-z])PASS([^A-Za-z]|$)|API[_A-Z]*KEY|PRIVATE[_-]?KEY|CREDENTIALS""",
         RegexOption.IGNORE_CASE,
     )
 

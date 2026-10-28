@@ -13,7 +13,7 @@ defmodule Envdoctor do
   alias Envdoctor.Scanner
   alias Envdoctor.Scanner.{Finding, Origin, ScanResult}
 
-  @version "1.0.0"
+  @version "1.0.1"
 
   @doc "envdoctor version."
   def version, do: @version

@@ -51,7 +51,7 @@ _PUBLIC_PREFIXES = (
 
 # Secret-looking name pattern (case-insensitive).
 _SECRET_NAME = re.compile(
-    r"SECRET|TOKEN|PASSWORD|PASSWD|PRIVATE|CREDENTIAL|API_?KEY|ACCESS_?KEY|AUTH",
+    r"SECRET|TOKEN|PASSWORD|PASSWD|PASSPHRASE|(^|[^A-Za-z])PASS([^A-Za-z]|$)|API[_A-Z]*KEY|PRIVATE[_-]?KEY|CREDENTIALS",
     re.IGNORECASE,
 )
 

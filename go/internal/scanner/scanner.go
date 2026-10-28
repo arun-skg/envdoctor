@@ -85,7 +85,7 @@ var publicPrefixes = []string{
 }
 
 // secretName matches secret-looking variable names (case-insensitive).
-var secretName = regexp.MustCompile(`(?i)SECRET|TOKEN|PASSWORD|PASSWD|PRIVATE|CREDENTIAL|API_?KEY|ACCESS_?KEY|AUTH`)
+var secretName = regexp.MustCompile(`(?i)SECRET|TOKEN|PASSWORD|PASSWD|PASSPHRASE|(^|[^A-Za-z])PASS([^A-Za-z]|$)|API[_A-Z]*KEY|PRIVATE[_-]?KEY|CREDENTIALS`)
 
 // weakSecretValue matches weak/placeholder secret values (case-insensitive).
 var weakSecretValue = regexp.MustCompile(`(?i)^(changeme|change_me|placeholder|x{3,}|todo|secret|password|passwd|test|example|sample|dummy|your[_-].*|<.*>|\$\{.*\})$`)

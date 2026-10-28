@@ -14,7 +14,7 @@
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>envdoctor</ToolCommandName>
     <PackageId>envdoctor</PackageId>
-    <Version>0.1.2</Version>
+    <Version>1.0.1</Version>
     <Authors>arun-skg</Authors>
     <Description>Local-first consistency checker for environment variables. Reconciles variables used in source against those defined in .env files, docker-compose, GitHub Actions, and Kubernetes manifests.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>

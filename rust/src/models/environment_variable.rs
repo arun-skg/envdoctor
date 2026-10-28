@@ -32,7 +32,7 @@ impl EnvironmentVariable {
     /// Check if a name looks like a secret based on common patterns.
     pub fn is_secret_name(name: &str) -> bool {
         regex::Regex::new(
-            r"(?i)(SECRET|TOKEN|PASSWORD|PASS|API[_A-Z]*KEY|PRIVATE[_-]?KEY|CREDENTIALS)",
+            r"(?i)(SECRET|TOKEN|PASSWORD|PASSWD|PASSPHRASE|(^|[^A-Za-z])PASS([^A-Za-z]|$)|API[_A-Z]*KEY|PRIVATE[_-]?KEY|CREDENTIALS)",
         )
         .unwrap()
         .is_match(name)
