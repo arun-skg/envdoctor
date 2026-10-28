@@ -25,7 +25,7 @@ defmodule EnvdoctorTest do
   defp warnings(%ScanResult{} = r), do: ScanResult.warnings(r)
 
   test "version matches the reference" do
-    assert Envdoctor.version() == "0.1.2"
+    assert Envdoctor.version() == "1.0.1"
   end
 
   test "detects all usage forms and ignores comments/heredocs", %{dir: dir} do

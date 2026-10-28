@@ -155,7 +155,7 @@ public final class Scanner {
         "GATSBY_", "NUXT_PUBLIC_", "VUE_APP_", "PUBLIC_"
     };
     private static final Pattern SECRET_NAME = Pattern.compile(
-            "SECRET|TOKEN|PASSWORD|PASSWD|PRIVATE|CREDENTIAL|API_?KEY|ACCESS_?KEY|AUTH",
+            "SECRET|TOKEN|PASSWORD|PASSWD|PASSPHRASE|(^|[^A-Za-z])PASS([^A-Za-z]|$)|API[_A-Z]*KEY|PRIVATE[_-]?KEY|CREDENTIALS",
             Pattern.CASE_INSENSITIVE);
 
     private static boolean isPublicSecret(String name) {

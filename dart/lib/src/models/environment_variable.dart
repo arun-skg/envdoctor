@@ -14,7 +14,7 @@ class EnvironmentVariable {
   final List<String>? ignoreRules;
 
   static final RegExp _secretNameRe = RegExp(
-    r'(SECRET|TOKEN|PASSWORD|PASS|API[_A-Z]*KEY|PRIVATE[_-]?KEY|CREDENTIALS)',
+    r'(SECRET|TOKEN|PASSWORD|PASSWD|PASSPHRASE|(^|[^A-Za-z])PASS([^A-Za-z]|$)|API[_A-Z]*KEY|PRIVATE[_-]?KEY|CREDENTIALS)',
     caseSensitive: false,
   );
 

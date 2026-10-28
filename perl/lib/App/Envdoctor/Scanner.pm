@@ -106,7 +106,7 @@ sub _type_group {
     return $t;
 }
 
-my $SECRET_NAME = qr/SECRET|TOKEN|PASSWORD|PASSWD|PRIVATE|CREDENTIAL|API_?KEY|ACCESS_?KEY|AUTH/i;
+my $SECRET_NAME = qr/SECRET|TOKEN|PASSWORD|PASSWD|PASSPHRASE|(^|[^A-Za-z])PASS([^A-Za-z]|$)|API[_A-Z]*KEY|PRIVATE[_-]?KEY|CREDENTIALS/i;
 my $WEAK_VALUE
     = qr/^(?:changeme|change_me|placeholder|x{3,}|todo|secret|password|passwd|test|example|sample|dummy|your[_-].*|<.*>|\$\{.*\})$/i;
 
@@ -168,7 +168,7 @@ sub _is_public_secret {
         if ( index( $name, $p ) == 0 ) { $has_prefix = 1; last; }
     }
     return 0 unless $has_prefix;
-    return $name =~ /SECRET|TOKEN|PASSWORD|PASSWD|PRIVATE|CREDENTIAL|API_?KEY|ACCESS_?KEY|AUTH/i
+    return $name =~ /SECRET|TOKEN|PASSWORD|PASSWD|PASSPHRASE|(^|[^A-Za-z])PASS([^A-Za-z]|$)|API[_A-Z]*KEY|PRIVATE[_-]?KEY|CREDENTIALS/i
         ? 1
         : 0;
 }

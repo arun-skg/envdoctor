@@ -8,7 +8,7 @@ namespace Envdoctor.Models;
 public sealed class EnvironmentVariable
 {
     private static readonly Regex SecretNameRe = new(
-        @"(SECRET|TOKEN|PASSWORD|PASS|API[_A-Z]*KEY|PRIVATE[_-]?KEY|CREDENTIALS)",
+        @"(SECRET|TOKEN|PASSWORD|PASSWD|PASSPHRASE|(^|[^A-Za-z])PASS([^A-Za-z]|$)|API[_A-Z]*KEY|PRIVATE[_-]?KEY|CREDENTIALS)",
         RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
     public required string Name { get; set; }
