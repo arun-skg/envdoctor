@@ -572,7 +572,7 @@ For code scanning this way, add `--format sarif` and upload the result with
 - **Values are never printed** to stdout/stderr (even with `--verbose`).
 - **Secrets are never written** to generated files (`.env.example`, `ENVIRONMENT.md`, `.github/ENVIRONMENT.md`, `env.d.ts`).
 - **No network calls, no telemetry** — everything runs locally.
-- Secret heuristic: name matches `/(SECRET|TOKEN|PASSWORD|PASS|API[_A-Z]*KEY|PRIVATE[_-]?KEY|CREDENTIALS)/i`.
+- Secret heuristic: name matches `/(SECRET|TOKEN|PASSWORD|PASSWD|PASSPHRASE|(^|[^A-Za-z])PASS([^A-Za-z]|$)|API[_A-Z]*KEY|PRIVATE[_-]?KEY|CREDENTIALS)/i`. `PASS` matches only as a whole token (`DB_PASS`), so `PASSPORT`/`COMPASS`/`BYPASS` are not misflagged.
 - Unreadable directories are skipped rather than aborting the scan.
 
 ## Architecture

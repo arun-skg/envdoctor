@@ -27,9 +27,18 @@ export interface EnvironmentVariable {
   ignoreRules?: string[];
 }
 
-/** Convenience helpers for building and reading variables. */
+/**
+ * True when the name matches the secret heuristic.
+ *
+ * `PASS` is matched only as a whole token (e.g. `DB_PASS`, `PASS`) rather than
+ * as a substring, so names like `PASSPORT`, `COMPASS`, `BYPASS`, and
+ * `PASSENGER` are not misreported as secrets. `PASSWORD`, `PASSWD`, and
+ * `PASSPHRASE` remain covered explicitly. The pattern deliberately uses no
+ * look-around so it ports verbatim to every native port's regex engine,
+ * including Go (RE2) and Rust, which lack lookbehind.
+ */
 export const isSecretName = (name: string): boolean =>
-  /(SECRET|TOKEN|PASSWORD|PASS|API[_A-Z]*KEY|PRIVATE[_-]?KEY|CREDENTIALS)/i.test(
+  /(SECRET|TOKEN|PASSWORD|PASSWD|PASSPHRASE|(^|[^A-Za-z])PASS([^A-Za-z]|$)|API[_A-Z]*KEY|PRIVATE[_-]?KEY|CREDENTIALS)/i.test(
     name,
   );
 

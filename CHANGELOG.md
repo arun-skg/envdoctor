@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## [1.0.1] - 2026-10-28
+
+### Fixed
+
+- Secret-name heuristic no longer matches `PASS` as a substring, so names like
+  `PASSPORT`, `COMPASS`, `BYPASS`, and `PASSENGER` are no longer misreported as
+  secrets (which previously produced false `weak-secret` / `public-prefix`
+  findings). `PASSWORD`, `PASSWD`, `PASSPHRASE`, and `DB_PASS`-style tokens are
+  still detected. The pattern uses no look-around so it remains portable to
+  every native port's regex engine.
+
 ## [1.0.0] - 2026-09-30
 
 First stable release. The CLI surface, exit-code contract, detector set, and
